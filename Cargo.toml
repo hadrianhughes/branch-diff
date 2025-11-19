@@ -1,0 +1,8 @@
+[package]
+name = "branch-diff"
+version = "0.1.0"
+edition = "2024"
+authors = ["Hadrian Hughes <hadrianhughes@gmail.com>"]
+license = "MIT"
+
+[dependencies]
