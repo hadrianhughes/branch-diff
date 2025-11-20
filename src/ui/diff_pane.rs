@@ -1,5 +1,5 @@
 use ratatui::{
-    buffer::Buffer, layout::Rect, style::Stylize, symbols::border, text::Line, widgets::{Block, Paragraph, Widget}
+    buffer::Buffer, layout::Rect, widgets::{Block, Borders, Padding, Paragraph, Widget}
 };
 
 #[derive(Debug, Default)]
@@ -15,11 +15,9 @@ impl DiffPane {
 
 impl Widget for &DiffPane {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let title = Line::from(" Diff ".bold());
-
         let block = Block::bordered()
-            .title(title.centered())
-            .border_set(border::THICK);
+            .padding(Padding::uniform(1))
+            .borders(Borders::NONE);
 
         Paragraph::new(self.text.as_str())
             .block(block)
