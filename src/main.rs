@@ -18,7 +18,6 @@ struct Args {
 
 fn main() -> io::Result<()> {
     let args = Args::parse();
-    println!("From: {}, Into: {}", args.from, args.into);
 
     let mut terminal = ratatui::init();
     let app_result = App::new(args.from, args.into).run(&mut terminal);
