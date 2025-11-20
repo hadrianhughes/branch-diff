@@ -12,7 +12,7 @@ pub struct CommitsPane {
     commits: Vec<String>,
 }
 
-impl Widget for CommitsPane {
+impl Widget for &CommitsPane {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let title = Line::from(" Commits ".bold());
 

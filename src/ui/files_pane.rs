@@ -12,7 +12,7 @@ pub struct FilesPane {
     files: Vec<String>,
 }
 
-impl Widget for FilesPane {
+impl Widget for &FilesPane {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let title = Line::from(" Files ".bold());
 

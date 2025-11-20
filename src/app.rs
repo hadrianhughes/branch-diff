@@ -12,10 +12,10 @@ pub struct App {
 }
 
 impl App {
-    pub fn new() -> Self {
+    pub fn new(from_branch: String, into_branch: String) -> Self {
         App {
-            ui: UI::new(),
-            state: AppState::new(),
+            ui: UI::new(from_branch.clone(), into_branch.clone()),
+            state: AppState::new(from_branch, into_branch),
         }
     }
 

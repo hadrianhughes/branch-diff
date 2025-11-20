@@ -13,7 +13,7 @@ impl DiffPane {
     }
 }
 
-impl Widget for DiffPane {
+impl Widget for &DiffPane {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let title = Line::from(" Diff ".bold());
 
@@ -21,7 +21,7 @@ impl Widget for DiffPane {
             .title(title.centered())
             .border_set(border::THICK);
 
-        Paragraph::new(self.text)
+        Paragraph::new(self.text.as_str())
             .block(block)
             .render(area, buf)
     }
