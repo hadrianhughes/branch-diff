@@ -3,23 +3,24 @@ use ratatui::{DefaultTerminal, Frame};
 use std::io;
 
 use crate::ui::UI;
+use crate::core::AppState;
 
 #[derive(Debug)]
 pub struct App {
     ui: UI,
-    exit: bool,
+    state: AppState,
 }
 
 impl App {
     pub fn new() -> Self {
         App {
             ui: UI::new(),
-            exit: false,
+            state: AppState::new(),
         }
     }
 
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
-        while !self.exit {
+        while self.state.exit == false {
             terminal.draw(|frame| self.draw(frame))?;
             self.handle_events()?;
         }
@@ -42,12 +43,8 @@ impl App {
 
     fn handle_key_event(&mut self, key_event: KeyEvent) {
         match key_event.code {
-            KeyCode::Char('q') => self.exit(),
+            KeyCode::Char('q') => self.state.exit(),
             _ => {},
         }
-    }
-
-    fn exit(&mut self) {
-        self.exit = true;
     }
 }
