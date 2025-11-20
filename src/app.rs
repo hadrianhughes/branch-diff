@@ -7,21 +7,26 @@ use crate::core::AppState;
 
 #[derive(Debug)]
 pub struct App {
-    ui: UI,
     state: AppState,
 }
 
 impl App {
     pub fn new(from_branch: String, into_branch: String) -> Self {
-        App {
-            ui: UI::new(from_branch.clone(), into_branch.clone()),
-            state: AppState::new(from_branch, into_branch),
-        }
+        let state = AppState::new(
+            from_branch.clone(),
+            into_branch.clone(),
+            Vec::new(),
+            Vec::new(),
+        );
+
+        App { state }
     }
 
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
         while self.state.exit == false {
-            terminal.draw(|frame| self.ui.render(frame))?;
+            let ui = UI::new(&self.state);
+
+            terminal.draw(|frame| ui.render(frame))?;
 
             match event::read()? {
                 Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {

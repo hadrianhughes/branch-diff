@@ -3,6 +3,7 @@ pub mod diff_pane;
 pub mod files_pane;
 pub mod commits_pane;
 
+use crate::core::AppState;
 use crate::ui::{
     bottom_bar::BottomBar,
     diff_pane::DiffPane,
@@ -16,20 +17,23 @@ use ratatui::{
 };
 
 #[derive(Debug)]
-pub struct UI {
+pub struct UI<'a> {
     diff_pane: DiffPane,
-    files_pane: FilesPane,
-    commits_pane: CommitsPane,
-    bottom_bar: BottomBar,
+    files_pane: FilesPane<'a>,
+    commits_pane: CommitsPane<'a>,
+    bottom_bar: BottomBar<'a>,
 }
 
-impl UI {
-    pub fn new(from_branch: String, into_branch: String) -> Self {
+impl<'a> UI<'a> {
+    pub fn new(state: &'a AppState) -> Self {
         UI {
-            diff_pane: DiffPane::new("Hello world".to_string()),
-            files_pane: FilesPane::default(),
-            commits_pane: CommitsPane::default(),
-            bottom_bar: BottomBar::new(from_branch, into_branch),
+            diff_pane: DiffPane::new("Hello world".into()),
+            files_pane: FilesPane::new(&state.files),
+            commits_pane: CommitsPane::new(&state.commits),
+            bottom_bar: BottomBar::new(
+                &state.from_branch,
+                &state.into_branch,
+            ),
         }
     }
 

@@ -7,12 +7,18 @@ use ratatui::{
     widgets::{Block, Paragraph, Widget},
 };
 
-#[derive(Debug, Default)]
-pub struct CommitsPane {
-    commits: Vec<String>,
+#[derive(Debug)]
+pub struct CommitsPane<'a> {
+    commits: &'a Vec<String>,
 }
 
-impl Widget for &CommitsPane {
+impl<'a> CommitsPane<'a> {
+    pub fn new(commits: &'a Vec<String>) -> Self {
+        CommitsPane { commits }
+    }
+}
+
+impl<'a> Widget for &CommitsPane<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let title = Line::from(" Commits ".bold());
 
