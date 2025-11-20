@@ -5,14 +5,14 @@ use ratatui::{
     widgets::{Paragraph, Widget},
 };
 
-#[derive(Debug, Default)]
-pub struct BottomBar {
-    from_branch: String,
-    into_branch: String,
+#[derive(Debug)]
+pub struct BottomBar<'a> {
+    from_branch: &'a String,
+    into_branch: &'a String,
 }
 
-impl BottomBar {
-    pub fn new(from_branch: String, into_branch: String) -> Self {
+impl<'a> BottomBar<'a> {
+    pub fn new(from_branch: &'a String, into_branch: &'a String) -> Self {
         BottomBar {
             from_branch,
             into_branch,
@@ -20,7 +20,7 @@ impl BottomBar {
     }
 }
 
-impl Widget for &BottomBar {
+impl<'a> Widget for &BottomBar<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let from_span = Span::from(self.from_branch.as_str());
         let into_span = Span::from(self.into_branch.as_str());
