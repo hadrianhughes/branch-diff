@@ -9,6 +9,7 @@ use ratatui::{
     text::{Line, Text},
     widgets::{Block, HighlightSpacing, List, ListItem, ListState, Padding, StatefulWidget, Widget},
 };
+use textwrap::wrap;
 
 use crate::core::Commit;
 
@@ -42,6 +43,10 @@ impl<'a> Widget for &mut CommitsPane<'a> {
             .border_set(if self.has_focus { border::THICK } else { border::PLAIN })
             .padding(Padding::uniform(1));
 
+        let total_width = area.width as usize;
+        let horizontal_padding = 2;
+        let wrap_width = total_width.saturating_sub(horizontal_padding);
+
         let items: Vec<ListItem> = self.commits
             .iter()
             .enumerate()
@@ -54,7 +59,13 @@ impl<'a> Widget for &mut CommitsPane<'a> {
 
                 if let Some(msg) = &item.message {
                     for line in msg.lines() {
-                        parts.push(Line::from(format!(" {}", line)));
+                        if wrap_width == 0 {
+                            parts.push(Line::from(format!(" {}", line)));
+                        } else {
+                            for wrapped in wrap(line, wrap_width) {
+                                parts.push(Line::from(format!(" {}", wrapped)));
+                            }
+                        }
                     }
                 }
 
