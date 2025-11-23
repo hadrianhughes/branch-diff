@@ -53,7 +53,9 @@ impl<'a> Widget for &mut CommitsPane<'a> {
                 ];
 
                 if let Some(msg) = &item.message {
-                    parts.push(Line::from(format!(" {}", msg.clone())))
+                    for line in msg.lines() {
+                        parts.push(Line::from(format!(" {}", line)));
+                    }
                 }
 
                 parts.push(Line::from(""));
