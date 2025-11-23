@@ -1,11 +1,13 @@
 mod app;
 mod core;
+mod repo;
 mod ui;
 
 use clap::Parser;
 use std::io;
 
 use app::App;
+use repo::Repo;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -18,6 +20,11 @@ struct Args {
 
 fn main() -> io::Result<()> {
     let args = Args::parse();
+
+    let repo = match Repo::new() {
+        Ok(r) => r,
+        Err(e) => panic!("Failed to open repository: {}", e),
+    };
 
     let mut terminal = ratatui::init();
     let app_result = App::new(args.from, args.into).run(&mut terminal);
