@@ -28,7 +28,7 @@ impl<'a> UI<'a> {
     pub fn new(state: &'a AppState) -> Self {
         UI {
             diff_pane: DiffPane::new("Hello world".into()),
-            files_pane: FilesPane::new(&state.files),
+            files_pane: FilesPane::new(&state.files, matches!(state.selected_pane, Pane::Files)),
             commits_pane: CommitsPane::new(&state.commits, matches!(state.selected_pane, Pane::Commits), state.selected_commit),
             bottom_bar: BottomBar::new(
                 &state.from_branch,

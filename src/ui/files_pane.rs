@@ -10,11 +10,12 @@ use ratatui::{
 #[derive(Debug)]
 pub struct FilesPane<'a> {
     files: &'a Vec<String>,
+    has_focus: bool,
 }
 
 impl<'a> FilesPane<'a> {
-    pub fn new(files: &'a Vec<String>) -> Self {
-        FilesPane { files }
+    pub fn new(files: &'a Vec<String>, has_focus: bool) -> Self {
+        FilesPane { files, has_focus }
     }
 }
 
@@ -24,7 +25,7 @@ impl<'a> Widget for &FilesPane<'a> {
 
         let block = Block::bordered()
             .title(title.centered())
-            .border_set(border::PLAIN);
+            .border_set(if self.has_focus { border::THICK } else { border::PLAIN });
 
         Paragraph::new("Files go here")
             .block(block)
