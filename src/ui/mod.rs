@@ -37,7 +37,7 @@ impl<'a> UI<'a> {
         }
     }
 
-    pub fn render(&self, frame: &mut Frame) {
+    pub fn render(&mut self, frame: &mut Frame) {
         let outer_layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints(vec![
@@ -64,7 +64,7 @@ impl<'a> UI<'a> {
 
         frame.render_widget(&self.diff_pane, main_layout[0]);
         frame.render_widget(&self.files_pane, right_layout[0]);
-        frame.render_widget(&self.commits_pane, right_layout[1]);
+        frame.render_widget(&mut self.commits_pane, right_layout[1]);
         frame.render_widget(&self.bottom_bar, outer_layout[1]);
     }
 }

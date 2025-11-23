@@ -31,7 +31,7 @@ impl App {
 
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
         while self.state.exit == false {
-            let ui = UI::new(&self.state);
+            let mut ui = UI::new(&self.state);
 
             terminal.draw(|frame| ui.render(frame))?;
 
