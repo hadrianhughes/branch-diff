@@ -1,8 +1,9 @@
+use git2::Repository;
 use std::env;
 use std::fmt;
 use std::io;
 
-use git2::Repository;
+use crate::core::Commit;
 
 pub struct Repo {
     repository: Repository,
@@ -14,6 +15,41 @@ impl Repo {
         let repository = Repository::open(path)?;
 
         Ok(Repo { repository })
+    }
+
+    pub fn commits_in_range(&self, base: &str, head: &str) -> Result<Vec<Commit>, RepoError> {
+        let base_ref = self.repository.revparse_single(base)?;
+        let head_ref = self.repository.revparse_single(head)?;
+
+        let mut revwalk = self.repository.revwalk()?;
+        revwalk.set_sorting(git2::Sort::TOPOLOGICAL | git2::Sort::REVERSE)?;
+
+        revwalk.hide(base_ref.id())?;
+        revwalk.push(head_ref.id())?;
+
+        let mut commits = Vec::new();
+        for oid in revwalk {
+            let commit = self.repository.find_commit(oid?)?;
+            commits.push(Commit {
+                hash: commit.id().to_string(),
+                message: match commit.message() {
+                    Some(msg) => Some(msg.to_string()),
+                    None => None,
+                },
+                author: commit.author().to_string(),
+            });
+        }
+
+        Ok(commits)
+    }
+}
+
+impl std::fmt::Debug for Repo {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self.repository.path().to_str() {
+            Some(p) => write!(f, "Repo <{}>", p),
+            None => write!(f, "Repo"),
+        }
     }
 }
 

@@ -3,15 +3,22 @@ pub struct AppState {
     pub exit: bool,
     pub from_branch: String,
     pub into_branch: String,
-    pub commits: Vec<String>,
+    pub commits: Vec<Commit>,
     pub files: Vec<String>,
+}
+
+#[derive(Debug)]
+pub struct Commit {
+    pub hash: String,
+    pub message: Option<String>,
+    pub author: String,
 }
 
 impl AppState {
     pub fn new(
         from_branch: String,
         into_branch: String,
-        commits: Vec<String>,
+        commits: Vec<Commit>,
         files: Vec<String>,
     ) -> Self {
         AppState {

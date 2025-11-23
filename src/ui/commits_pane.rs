@@ -7,13 +7,15 @@ use ratatui::{
     widgets::{Block, Paragraph, Widget},
 };
 
+use crate::core::Commit;
+
 #[derive(Debug)]
 pub struct CommitsPane<'a> {
-    commits: &'a Vec<String>,
+    commits: &'a Vec<Commit>,
 }
 
 impl<'a> CommitsPane<'a> {
-    pub fn new(commits: &'a Vec<String>) -> Self {
+    pub fn new(commits: &'a Vec<Commit>) -> Self {
         CommitsPane { commits }
     }
 }

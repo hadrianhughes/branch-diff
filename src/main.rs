@@ -23,11 +23,13 @@ fn main() -> io::Result<()> {
 
     let repo = match Repo::new() {
         Ok(r) => r,
-        Err(e) => panic!("Failed to open repository: {}", e),
+        Err(e) => panic!("Couldn't open repository: {}", e),
     };
 
     let mut terminal = ratatui::init();
-    let app_result = App::new(args.from, args.into).run(&mut terminal);
+    let app_result = App::new(repo, args.from, args.into)
+        .run(&mut terminal);
+
     ratatui::restore();
     app_result
 }
