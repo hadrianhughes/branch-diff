@@ -48,12 +48,12 @@ impl<'a> Widget for &mut CommitsPane<'a> {
             .map(|(_, item)| {
                 let mut parts = vec![
                     Line::from(""),
-                    Line::from(item.hash.clone()),
-                    Line::from(item.author.clone()),
+                    Line::from(format!(" {}", item.hash.clone())),
+                    Line::from(format!(" {}", item.author.clone())),
                 ];
 
                 if let Some(msg) = &item.message {
-                    parts.push(Line::from(msg.clone()))
+                    parts.push(Line::from(format!(" {}", msg.clone())))
                 }
 
                 parts.push(Line::from(""));
