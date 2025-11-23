@@ -15,13 +15,15 @@ use crate::core::Commit;
 #[derive(Debug)]
 pub struct CommitsPane<'a> {
     commits: &'a Vec<Commit>,
+    has_focus: bool,
     pub state: ListState,
 }
 
 impl<'a> CommitsPane<'a> {
-    pub fn new(commits: &'a Vec<Commit>, selected_commit: usize) -> Self {
+    pub fn new(commits: &'a Vec<Commit>, has_focus: bool, selected_commit: usize) -> Self {
         let mut pane = CommitsPane {
             commits,
+            has_focus,
             state: ListState::default(),
         };
 
@@ -31,15 +33,13 @@ impl<'a> CommitsPane<'a> {
     }
 }
 
-const SELECTED_STYLE: Style = Style::new().bg(SLATE.c800).add_modifier(Modifier::BOLD);
-
 impl<'a> Widget for &mut CommitsPane<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let title = Line::from(" Commits ".bold());
 
         let block = Block::bordered()
             .title(title.centered())
-            .border_set(border::THICK)
+            .border_set(if self.has_focus { border::THICK } else { border::PLAIN })
             .padding(Padding::uniform(1));
 
         let items: Vec<ListItem> = self.commits
@@ -64,7 +64,7 @@ impl<'a> Widget for &mut CommitsPane<'a> {
 
         let list = List::new(items)
             .block(block)
-            .highlight_style(SELECTED_STYLE)
+            .highlight_style(Style::new().bg(if self.has_focus { SLATE.c600 } else { SLATE.c700 }).add_modifier(Modifier::BOLD))
             .highlight_spacing(HighlightSpacing::Always);
 
         StatefulWidget::render(list, area, buf, &mut self.state)

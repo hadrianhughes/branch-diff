@@ -3,7 +3,7 @@ pub mod diff_pane;
 pub mod files_pane;
 pub mod commits_pane;
 
-use crate::core::AppState;
+use crate::core::{AppState, Pane};
 use crate::ui::{
     bottom_bar::BottomBar,
     diff_pane::DiffPane,
@@ -29,7 +29,7 @@ impl<'a> UI<'a> {
         UI {
             diff_pane: DiffPane::new("Hello world".into()),
             files_pane: FilesPane::new(&state.files),
-            commits_pane: CommitsPane::new(&state.commits, state.selected_commit),
+            commits_pane: CommitsPane::new(&state.commits, matches!(state.selected_pane, Pane::Commits), state.selected_commit),
             bottom_bar: BottomBar::new(
                 &state.from_branch,
                 &state.into_branch,

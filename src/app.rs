@@ -3,7 +3,7 @@ use ratatui::DefaultTerminal;
 use std::io;
 
 use crate::ui::UI;
-use crate::core::{AppState, Direction};
+use crate::core::{AppState, Direction, Pane};
 use crate::repo::Repo;
 
 #[derive(Debug)]
@@ -50,6 +50,9 @@ impl App {
             KeyCode::Char('q') => self.state.exit(),
             KeyCode::Char('j') | KeyCode::Down => self.state.navigate(Direction::Down),
             KeyCode::Char('k') | KeyCode::Up => self.state.navigate(Direction::Up),
+            KeyCode::Char('c') => self.state.select_pane(Pane::Commits),
+            KeyCode::Char('d') => self.state.select_pane(Pane::Diff),
+            KeyCode::Char('f') => self.state.select_pane(Pane::Files),
             _ => {},
         }
     }

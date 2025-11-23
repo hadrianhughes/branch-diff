@@ -43,7 +43,7 @@ impl AppState {
             exit: false,
             commits,
             files,
-            selected_pane: Pane::Commits,
+            selected_pane: Pane::Diff,
             selected_commit: 0,
         }
     }
@@ -67,5 +67,9 @@ impl AppState {
             },
             _ => {},
         }
+    }
+
+    pub fn select_pane(&mut self, pane: Pane) {
+        self.selected_pane = pane;
     }
 }

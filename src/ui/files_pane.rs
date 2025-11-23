@@ -24,7 +24,7 @@ impl<'a> Widget for &FilesPane<'a> {
 
         let block = Block::bordered()
             .title(title.centered())
-            .border_set(border::THICK);
+            .border_set(border::PLAIN);
 
         Paragraph::new("Files go here")
             .block(block)
