@@ -5,6 +5,8 @@ pub struct AppState {
     pub into_branch: String,
     pub commits: Vec<Commit>,
     pub files: Vec<String>,
+    pub selected_pane: Pane,
+    pub selected_commit: usize,
 }
 
 #[derive(Debug)]
@@ -12,6 +14,20 @@ pub struct Commit {
     pub hash: String,
     pub message: Option<String>,
     pub author: String,
+}
+
+#[derive(Debug)]
+pub enum Pane {
+    Diff = 0,
+    Files = 1,
+    Commits = 2,
+}
+
+pub enum Direction {
+    Down = 0,
+    Up = 1,
+    Left = 2,
+    Right = 3,
 }
 
 impl AppState {
@@ -27,10 +43,29 @@ impl AppState {
             exit: false,
             commits,
             files,
+            selected_pane: Pane::Commits,
+            selected_commit: 0,
         }
     }
 
     pub fn exit(&mut self) {
         self.exit = true;
+    }
+
+    pub fn navigate(&mut self, direction: Direction) {
+        match self.selected_pane {
+            Pane::Commits => {
+                match direction {
+                    Direction::Down => {
+                        self.selected_commit = if self.selected_commit == self.commits.len() - 1 { 0 } else { self.selected_commit + 1 };
+                    }
+                    Direction::Up => {
+                        self.selected_commit = if self.selected_commit == 0 { self.commits.len() - 1 } else { self.selected_commit - 1};
+                    },
+                    _ => {},
+                }
+            },
+            _ => {},
+        }
     }
 }

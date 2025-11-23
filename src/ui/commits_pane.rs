@@ -19,13 +19,13 @@ pub struct CommitsPane<'a> {
 }
 
 impl<'a> CommitsPane<'a> {
-    pub fn new(commits: &'a Vec<Commit>) -> Self {
+    pub fn new(commits: &'a Vec<Commit>, selected_commit: usize) -> Self {
         let mut pane = CommitsPane {
             commits,
             state: ListState::default(),
         };
 
-        pane.state.select(Some(0));
+        pane.state.select(Some(selected_commit));
 
         pane
     }

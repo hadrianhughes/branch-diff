@@ -29,7 +29,7 @@ impl<'a> UI<'a> {
         UI {
             diff_pane: DiffPane::new("Hello world".into()),
             files_pane: FilesPane::new(&state.files),
-            commits_pane: CommitsPane::new(&state.commits),
+            commits_pane: CommitsPane::new(&state.commits, state.selected_commit),
             bottom_bar: BottomBar::new(
                 &state.from_branch,
                 &state.into_branch,

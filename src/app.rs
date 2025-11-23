@@ -3,7 +3,7 @@ use ratatui::DefaultTerminal;
 use std::io;
 
 use crate::ui::UI;
-use crate::core::AppState;
+use crate::core::{AppState, Direction};
 use crate::repo::Repo;
 
 #[derive(Debug)]
@@ -48,6 +48,8 @@ impl App {
     fn handle_key_event(&mut self, key_event: KeyEvent) {
         match key_event.code {
             KeyCode::Char('q') => self.state.exit(),
+            KeyCode::Char('j') | KeyCode::Down => self.state.navigate(Direction::Down),
+            KeyCode::Char('k') | KeyCode::Up => self.state.navigate(Direction::Up),
             _ => {},
         }
     }
