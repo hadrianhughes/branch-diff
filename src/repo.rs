@@ -1,4 +1,5 @@
 use git2::Repository;
+use std::collections::HashMap;
 use std::env;
 use std::fmt;
 use std::io;
@@ -37,6 +38,7 @@ impl Repo {
                     None => None,
                 },
                 author: commit.author().to_string(),
+                diff: HashMap::new(),
             });
         }
 

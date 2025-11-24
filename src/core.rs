@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 #[derive(Debug)]
 pub struct AppState {
     pub exit: bool,
@@ -14,6 +16,20 @@ pub struct Commit {
     pub hash: String,
     pub message: Option<String>,
     pub author: String,
+    pub file_diffs: HashMap<String, Vec<Change>>,
+}
+
+#[derive(Debug)]
+pub struct Change {
+    text: String,
+    kind: ChangeKind,
+}
+
+#[derive(Debug)]
+pub enum ChangeKind {
+    Neutral = 0,
+    Insertion = 1,
+    Deletion = 2,
 }
 
 #[derive(Debug)]
