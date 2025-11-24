@@ -5,7 +5,8 @@ pub struct AppState {
     pub exit: bool,
     pub from_branch: String,
     pub into_branch: String,
-    pub commits: Vec<Commit>,
+    pub commits: HashMap<String, Commit>,
+    pub commits_order: Vec<String>,
     pub files: Vec<String>,
     pub selected_pane: Pane,
     pub selected_commit: usize,
@@ -50,7 +51,8 @@ impl AppState {
     pub fn new(
         from_branch: String,
         into_branch: String,
-        commits: Vec<Commit>,
+        commits: HashMap<String, Commit>,
+        commits_order: Vec<String>,
         files: Vec<String>,
     ) -> Self {
         AppState {
@@ -58,6 +60,7 @@ impl AppState {
             into_branch,
             exit: false,
             commits,
+            commits_order,
             files,
             selected_pane: Pane::Diff,
             selected_commit: 0,

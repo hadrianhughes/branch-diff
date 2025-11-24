@@ -20,7 +20,7 @@ impl Repo {
         Ok(Repo { repository })
     }
 
-    pub fn commits_in_range(&self, base: &str, head: &str) -> Result<Vec<Commit>, RepoError> {
+    pub fn commits_in_range(&self, base: &str, head: &str) -> Result<(HashMap<String, Commit>, Vec<String>), RepoError> {
         let base_ref = self.repository.revparse_single(base)?;
         let head_ref = self.repository.revparse_single(head)?;
 
@@ -30,7 +30,9 @@ impl Repo {
         revwalk.hide(base_ref.id())?;
         revwalk.push(head_ref.id())?;
 
-        let mut commits = Vec::new();
+        let mut commits = HashMap::new();
+        let mut commits_order = Vec::new();
+
         for oid in revwalk {
             let commit = self.repository.find_commit(oid?)?;
             let hash = commit.id().to_string();
@@ -45,7 +47,8 @@ impl Repo {
                     return Err(e);
                 },
                 Ok(file_diffs) => {
-                    commits.push(Commit {
+                    commits_order.push(hash.clone());
+                    commits.insert(hash.clone(), Commit {
                         hash,
                         message,
                         author,
@@ -55,7 +58,7 @@ impl Repo {
             }
         }
 
-        Ok(commits)
+        Ok((commits, commits_order))
     }
 
     fn get_commit_diff(&self, commit: git2::Commit) -> Result<HashMap<String, Vec<Change>>, RepoError> {

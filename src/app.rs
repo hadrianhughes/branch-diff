@@ -14,7 +14,7 @@ pub struct App {
 
 impl App {
     pub fn new(repository: Repo, from_branch: String, into_branch: String) -> Self {
-        let commits = match repository.commits_in_range(into_branch.as_str(), from_branch.as_str()) {
+        let (commits, commits_order) = match repository.commits_in_range(into_branch.as_str(), from_branch.as_str()) {
             Ok(cs) => cs,
             Err(e) => panic!("Couldn't get commits: {}", e),
         };
@@ -23,6 +23,7 @@ impl App {
             from_branch.clone(),
             into_branch.clone(),
             commits,
+            commits_order,
             Vec::new(),
         );
 

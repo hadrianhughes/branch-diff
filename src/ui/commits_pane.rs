@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Direction, Layout, Rect},
@@ -15,16 +17,23 @@ use crate::core::Commit;
 
 #[derive(Debug)]
 pub struct CommitsPane<'a> {
-    commits: &'a Vec<Commit>,
+    commits: &'a HashMap<String, Commit>,
+    commits_order: &'a Vec<String>,
     has_focus: bool,
     pub list_state: ListState,
     pub scroll_state: ScrollbarState,
 }
 
 impl<'a> CommitsPane<'a> {
-    pub fn new(commits: &'a Vec<Commit>, has_focus: bool, selected_commit: usize) -> Self {
+    pub fn new(
+        commits: &'a HashMap<String, Commit>,
+        commits_order: &'a Vec<String>,
+        has_focus: bool,
+        selected_commit: usize,
+    ) -> Self {
         CommitsPane {
             commits,
+            commits_order,
             has_focus,
             list_state: {
                 let mut l = ListState::default();
@@ -59,13 +68,16 @@ impl<'a> Widget for &mut CommitsPane<'a> {
         let horizontal_padding = 2;
         let wrap_width = total_width.saturating_sub(horizontal_padding);
 
-        let items: Vec<ListItem> = self.commits
+        let items: Vec<ListItem> = self.commits_order
             .iter()
-            .enumerate()
-            .map(|(_, item)| {
+            .map(|hash| {
+                let Some(item) = self.commits.get(hash) else {
+                    panic!("No commit found for hash: {}", hash);
+                };
+
                 let mut parts = vec![
                     Line::from(""),
-                    Line::from(format!(" {} ", item.hash.clone())),
+                    Line::from(format!(" {} ", hash.clone())),
                     Line::from(format!(" {} ", item.author.clone())),
                 ];
 
@@ -85,7 +97,7 @@ impl<'a> Widget for &mut CommitsPane<'a> {
 
                 ListItem::new(Text::from(parts))
             })
-            .collect();
+        .collect();
 
         block.render(area, buf);
 
