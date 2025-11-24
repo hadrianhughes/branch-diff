@@ -1,9 +1,11 @@
-use git2::Repository;
+use git2::{DiffFormat, Repository};
 use std::collections::HashMap;
 use std::env;
 use std::fmt;
 use std::io;
 
+use crate::core::Change;
+use crate::core::ChangeKind;
 use crate::core::Commit;
 
 pub struct Repo {
@@ -31,18 +33,92 @@ impl Repo {
         let mut commits = Vec::new();
         for oid in revwalk {
             let commit = self.repository.find_commit(oid?)?;
-            commits.push(Commit {
-                hash: commit.id().to_string(),
-                message: match commit.message() {
-                    Some(msg) => Some(msg.to_string()),
-                    None => None,
+            let hash = commit.id().to_string();
+            let author = commit.author().to_string();
+            let message = match commit.message() {
+                Some(msg) => Some(msg.to_string()),
+                None => None,
+            };
+
+            match self.get_commit_diff(commit) {
+                Err(e) => {
+                    return Err(e);
                 },
-                author: commit.author().to_string(),
-                diff: HashMap::new(),
-            });
+                Ok(file_diffs) => {
+                    commits.push(Commit {
+                        hash,
+                        message,
+                        author,
+                        file_diffs,
+                    });
+                },
+            }
         }
 
         Ok(commits)
+    }
+
+    fn get_commit_diff(&self, commit: git2::Commit) -> Result<HashMap<String, Vec<Change>>, RepoError> {
+        let tree = commit.tree()?;
+
+        let parent_tree = if commit.parent_count() > 0 {
+            Some(commit.parent(0)?.tree()?)
+        } else {
+            None
+        };
+
+        let diff = self.repository.diff_tree_to_tree(parent_tree.as_ref(), Some(&tree), None)?;
+
+        let mut file_diffs: HashMap<String, Vec<Change>> = HashMap::new();
+
+        let result = diff.print(DiffFormat::Patch, |delta, _hunk, line| {
+            let Ok(text) = std::str::from_utf8(line.content()) else {
+                return true;
+            };
+
+            let change_kind = match line.origin() {
+                ' ' => ChangeKind::Neutral,
+                '+' => ChangeKind::Insertion,
+                '-' => ChangeKind::Deletion,
+                _   => {
+                    return true;
+                },
+            };
+
+            let Some(file_path) = ({
+                let path = match change_kind {
+                    ChangeKind::Insertion | ChangeKind::Neutral => delta.new_file().path(),
+                    ChangeKind::Deletion => delta.old_file().path(),
+                };
+
+                if let Some(p) = path {
+                    p.to_str()
+                } else {
+                    None
+                }
+            }) else {
+                println!("Couldn't get file path for diff delta");
+                return true;
+            };
+
+            let change = Change::new(text.to_string(), change_kind);
+
+            if let Some(file_vec) = file_diffs.get_mut(file_path) {
+                file_vec.push(change);
+            } else {
+                let mut file_vec = Vec::new();
+                file_vec.push(change);
+                file_diffs.insert(file_path.to_string(), file_vec);
+            }
+
+            true
+        });
+
+        if let Err(e) = result {
+            Err(RepoError::Git(e))
+        } else {
+            Ok(file_diffs)
+        }
     }
 }
 

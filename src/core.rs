@@ -89,3 +89,9 @@ impl AppState {
         self.selected_pane = pane;
     }
 }
+
+impl Change {
+    pub fn new(text: String, kind: ChangeKind) -> Self {
+        Change { text, kind }
+    }
+}
