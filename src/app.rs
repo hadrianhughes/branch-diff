@@ -54,9 +54,7 @@ impl App {
             KeyCode::Char('c') => self.state.select_pane(Pane::Commits),
             KeyCode::Char('d') => self.state.select_pane(Pane::Diff),
             KeyCode::Char('f') => self.state.select_pane(Pane::Files),
-            KeyCode::Enter => if matches!(self.state.selected_pane, Pane::Commits) {
-                self.state.select_pane(Pane::Diff);
-            }
+            KeyCode::Enter => self.state.select(),
             _ => {},
         }
     }

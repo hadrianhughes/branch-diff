@@ -97,4 +97,13 @@ impl AppState {
     pub fn select_pane(&mut self, pane: Pane) {
         self.selected_pane = pane;
     }
+
+    pub fn select(&mut self) {
+        match self.selected_pane {
+            Pane::Commits => {
+                self.select_pane(Pane::Diff);
+            },
+            _ => {},
+        }
+    }
 }
