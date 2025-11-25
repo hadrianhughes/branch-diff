@@ -1,25 +1,29 @@
+use std::collections::HashMap;
+
 use ratatui::{
     buffer::Buffer, layout::Rect, widgets::{Block, Borders, Padding, Paragraph, Widget}
 };
 
-#[derive(Debug, Default)]
-pub struct DiffPane {
-    text: String,
+use crate::core::Change;
+
+#[derive(Debug)]
+pub struct DiffPane<'a> {
+    file_diffs: &'a HashMap<String, Vec<Change>>,
 }
 
-impl DiffPane {
-    pub fn new(text: String) -> Self {
-        DiffPane { text }
+impl<'a> DiffPane<'a> {
+    pub fn new(file_diffs: &'a HashMap<String, Vec<Change>>) -> Self {
+        DiffPane { file_diffs }
     }
 }
 
-impl Widget for &DiffPane {
+impl<'a> Widget for &DiffPane<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let block = Block::bordered()
             .padding(Padding::uniform(1))
             .borders(Borders::NONE);
 
-        Paragraph::new(self.text.as_str())
+        Paragraph::new("Diff here")
             .block(block)
             .render(area, buf)
     }

@@ -18,7 +18,7 @@ use ratatui::{
 
 #[derive(Debug)]
 pub struct UI<'a> {
-    diff_pane: DiffPane,
+    diff_pane: DiffPane<'a>,
     files_pane: FilesPane<'a>,
     commits_pane: CommitsPane<'a>,
     bottom_bar: BottomBar<'a>,
@@ -26,8 +26,12 @@ pub struct UI<'a> {
 
 impl<'a> UI<'a> {
     pub fn new(state: &'a AppState) -> Self {
+        let Some(commit) = state.commits.get(&state.commits_order[state.selected_commit]) else {
+            panic!("Couldn't find selected commit during render");
+        };
+
         UI {
-            diff_pane: DiffPane::new("Hello world".into()),
+            diff_pane: DiffPane::new(&commit.file_diffs),
             files_pane: FilesPane::new(&state.files, matches!(state.selected_pane, Pane::Files)),
             commits_pane: CommitsPane::new(
                 &state.commits,
