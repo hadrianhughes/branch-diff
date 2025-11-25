@@ -3,7 +3,7 @@ name = "branch-diff"
 version = "0.1.0"
 edition = "2024"
 authors = ["Hadrian Hughes <hadrianhughes@gmail.com>"]
-license = "MIT"
+license = "GPL-3.0-or-later"
 
 [dependencies]
 ratatui = "0.29.0"
