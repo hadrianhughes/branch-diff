@@ -22,14 +22,8 @@ pub struct Commit {
 
 #[derive(Debug)]
 pub struct Change {
-    text: String,
-    kind: ChangeKind,
-}
-
-impl Change {
-    pub fn new(text: String, kind: ChangeKind) -> Self {
-        Change { text, kind }
-    }
+    pub text: String,
+    pub kind: ChangeKind,
 }
 
 #[derive(Debug)]

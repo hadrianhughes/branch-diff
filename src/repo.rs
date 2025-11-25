@@ -104,7 +104,10 @@ impl Repo {
                 return true;
             };
 
-            let change = Change::new(text.to_string(), change_kind);
+            let change = Change {
+                text: text.to_string(),
+                kind: change_kind,
+            };
 
             if let Some(file_vec) = file_diffs.get_mut(file_path) {
                 file_vec.push(change);

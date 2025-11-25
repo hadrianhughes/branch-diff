@@ -1,14 +1,10 @@
 use std::collections::HashMap;
 
 use ratatui::{
-    buffer::Buffer,
-    layout::{Constraint, Direction, Layout, Rect},
-    symbols::border,
-    text::Line,
-    widgets::{Block, Padding, Paragraph, Widget},
+    buffer::Buffer, layout::Rect, style::Stylize, text::Line, widgets::{Block, Borders, Padding, Paragraph, Widget}
 };
 
-use crate::state::Change;
+use crate::state::{Change, ChangeKind};
 
 #[derive(Debug)]
 pub struct DiffPane<'a> {
@@ -23,27 +19,31 @@ impl<'a> DiffPane<'a> {
 
 impl<'a> Widget for &DiffPane<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let constraints = self.file_diffs.iter().map(|(_, lines)| {
-            Constraint::Length(lines.len() as u16 + 2)
-        }).collect::<Vec<_>>();
+        let mut lines = Vec::new();
 
-        let chunks = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints(constraints)
-            .split(area);
+        for (file_name, diff_lines) in self.file_diffs {
+            lines.push(Line::from(format!("── {file_name}")).bold());
 
-        for (i, (key, _)) in self.file_diffs.iter().enumerate() {
-            let file_title = Line::from(format!(" {} ", key));
+            for l in diff_lines {
+                let kind_marker = match l.kind {
+                    ChangeKind::Insertion => '+',
+                    ChangeKind::Deletion => '-',
+                    ChangeKind::Neutral => ' ',
+                };
 
-            let file_block = Block::bordered()
-                .title(file_title)
-                .padding(Padding::uniform(1))
-                .border_set(border::PLAIN);
+                lines.push(Line::from(format!("{} {}", kind_marker, l.text.clone())));
+            }
 
-            let paragraph = Paragraph::new("Diff contents")
-                .block(file_block);
-
-            paragraph.render(chunks[i], buf);
+            lines.push(Line::from(""));
         }
+
+        let block = Block::new()
+            .borders(Borders::NONE)
+            .padding(Padding::uniform(1));
+
+        Paragraph::new(lines)
+            .block(block)
+            .scroll((0, 0))
+            .render(area, buf);
     }
 }
