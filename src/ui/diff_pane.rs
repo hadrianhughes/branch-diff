@@ -4,7 +4,7 @@ use ratatui::{
     buffer::Buffer, layout::Rect, widgets::{Block, Borders, Padding, Paragraph, Widget}
 };
 
-use crate::core::Change;
+use crate::state::Change;
 
 #[derive(Debug)]
 pub struct DiffPane<'a> {

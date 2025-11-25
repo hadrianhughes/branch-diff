@@ -3,7 +3,7 @@ pub mod diff_pane;
 pub mod files_pane;
 pub mod commits_pane;
 
-use crate::core::{AppState, Pane};
+use crate::state::{AppState, Pane};
 use crate::ui::{
     bottom_bar::BottomBar,
     diff_pane::DiffPane,

@@ -26,6 +26,12 @@ pub struct Change {
     kind: ChangeKind,
 }
 
+impl Change {
+    pub fn new(text: String, kind: ChangeKind) -> Self {
+        Change { text, kind }
+    }
+}
+
 #[derive(Debug)]
 pub enum ChangeKind {
     Neutral = 0,
@@ -90,11 +96,5 @@ impl AppState {
 
     pub fn select_pane(&mut self, pane: Pane) {
         self.selected_pane = pane;
-    }
-}
-
-impl Change {
-    pub fn new(text: String, kind: ChangeKind) -> Self {
-        Change { text, kind }
     }
 }

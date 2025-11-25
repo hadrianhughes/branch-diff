@@ -4,9 +4,9 @@ use std::env;
 use std::fmt;
 use std::io;
 
-use crate::core::Change;
-use crate::core::ChangeKind;
-use crate::core::Commit;
+use crate::state::Change;
+use crate::state::ChangeKind;
+use crate::state::Commit;
 
 pub struct Repo {
     repository: Repository,

@@ -1,6 +1,6 @@
 mod app;
-mod core;
 mod repo;
+mod state;
 mod ui;
 
 use clap::Parser;

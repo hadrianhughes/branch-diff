@@ -3,7 +3,7 @@ use ratatui::DefaultTerminal;
 use std::io;
 
 use crate::ui::UI;
-use crate::core::{AppState, Direction, Pane};
+use crate::state::{AppState, Direction, Pane};
 use crate::repo::Repo;
 
 #[derive(Debug)]

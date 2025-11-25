@@ -13,7 +13,7 @@ use ratatui::{
 };
 use textwrap::wrap;
 
-use crate::core::Commit;
+use crate::state::Commit;
 
 #[derive(Debug)]
 pub struct CommitsPane<'a> {
