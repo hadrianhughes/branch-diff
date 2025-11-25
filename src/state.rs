@@ -43,8 +43,6 @@ pub enum Pane {
 pub enum Direction {
     Down = 0,
     Up = 1,
-    Left = 2,
-    Right = 3,
 }
 
 impl AppState {
@@ -81,7 +79,6 @@ impl AppState {
                     Direction::Up => {
                         self.selected_commit = if self.selected_commit == 0 { self.commits.len() - 1 } else { self.selected_commit - 1};
                     },
-                    _ => {},
                 }
             },
             _ => {},
