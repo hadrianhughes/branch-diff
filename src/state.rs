@@ -10,6 +10,7 @@ pub struct AppState {
     pub files: Vec<String>,
     pub selected_pane: Pane,
     pub selected_commit: usize,
+    pub scroll_position: i16,
 }
 
 #[derive(Debug)]
@@ -62,6 +63,7 @@ impl AppState {
             files,
             selected_pane: Pane::Diff,
             selected_commit: 0,
+            scroll_position: 0,
         }
     }
 
@@ -78,6 +80,18 @@ impl AppState {
                     }
                     Direction::Up => {
                         self.selected_commit = if self.selected_commit == 0 { self.commits.len() - 1 } else { self.selected_commit - 1};
+                    },
+                }
+            },
+            Pane::Diff => {
+                match direction {
+                    Direction::Down => {
+                        self.scroll_position += 1;
+                    },
+                    Direction::Up => {
+                        if self.scroll_position > 0 {
+                            self.scroll_position -= 1;
+                        }
                     },
                 }
             },

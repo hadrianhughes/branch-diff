@@ -31,7 +31,7 @@ impl<'a> UI<'a> {
         };
 
         UI {
-            diff_pane: DiffPane::new(&commit.file_diffs),
+            diff_pane: DiffPane::new(&commit.file_diffs, state.scroll_position),
             files_pane: FilesPane::new(&state.files, matches!(state.selected_pane, Pane::Files)),
             commits_pane: CommitsPane::new(
                 &state.commits,
