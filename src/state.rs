@@ -75,12 +75,12 @@ impl AppState {
         match self.selected_pane {
             Pane::Commits => {
                 match direction {
-                    Direction::Down => {
-                        self.selected_commit = if self.selected_commit == self.commits.len() - 1 { 0 } else { self.selected_commit + 1 };
-                    }
-                    Direction::Up => {
-                        self.selected_commit = if self.selected_commit == 0 { self.commits.len() - 1 } else { self.selected_commit - 1};
-                    },
+                    Direction::Down => self.select_commit(
+                        if self.selected_commit == self.commits.len() - 1 { 0 } else { self.selected_commit + 1 }
+                    ),
+                    Direction::Up => self.select_commit(
+                        if self.selected_commit == 0 { self.commits.len() - 1 } else { self.selected_commit - 1}
+                    ),
                 }
             },
             Pane::Diff => {
@@ -96,6 +96,15 @@ impl AppState {
                 }
             },
             _ => {},
+        }
+    }
+
+    pub fn select_commit(&mut self, index: usize) {
+        if index < self.commits.len() {
+            self.selected_commit = index;
+            self.scroll_position = 0;
+        } else {
+            tracing::error!("attempted to select an out of bounds commit index: {index}");
         }
     }
 
