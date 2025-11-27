@@ -26,9 +26,7 @@ pub struct UI<'a> {
 
 impl<'a> UI<'a> {
     pub fn new(state: &'a AppState) -> Self {
-        let Some(commit) = state.commits.get(&state.commits_order[state.selected_commit]) else {
-            panic!("Couldn't find selected commit during render");
-        };
+        let commit = state.get_selected_commit();
 
         UI {
             diff_pane: DiffPane::new(&commit.file_diffs, state.scroll_position),

@@ -19,6 +19,7 @@ pub struct Commit {
     pub message: Option<String>,
     pub author: String,
     pub file_diffs: HashMap<String, Vec<Change>>,
+    pub diff_len: usize,
 }
 
 #[derive(Debug)]
@@ -71,6 +72,12 @@ impl AppState {
         self.exit = true;
     }
 
+    pub fn get_selected_commit(&self) -> &Commit {
+        self.commits
+            .get(self.commits_order[self.selected_commit].as_str())
+            .expect(format!("attempted to get out of bounds commit with index: {}", self.selected_commit).as_str())
+    }
+
     pub fn navigate(&mut self, direction: Direction) {
         match self.selected_pane {
             Pane::Commits => {
@@ -86,7 +93,11 @@ impl AppState {
             Pane::Diff => {
                 match direction {
                     Direction::Down => {
-                        self.scroll_position += 1;
+                        let commit = self.get_selected_commit();
+
+                        if self.scroll_position < (commit.diff_len as i16) - 1 {
+                            self.scroll_position += 1;
+                        }
                     },
                     Direction::Up => {
                         if self.scroll_position > 0 {

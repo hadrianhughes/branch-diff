@@ -47,12 +47,18 @@ impl Repo {
                     return Err(e);
                 },
                 Ok(file_diffs) => {
+                    let diff_len = file_diffs
+                        .iter()
+                        .map(|(_, changes)| { changes.len() })
+                        .sum();
+
                     commits_order.push(hash.clone());
                     commits.insert(hash.clone(), Commit {
                         hash,
                         message,
                         author,
                         file_diffs,
+                        diff_len,
                     });
                 },
             }
