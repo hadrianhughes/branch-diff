@@ -4,7 +4,10 @@ mod state;
 mod ui;
 
 use clap::Parser;
+use std::env;
+use std::fs::File;
 use std::io;
+use tracing_subscriber::{filter::EnvFilter, fmt::{self, writer::BoxMakeWriter}, layer::SubscriberExt, util::SubscriberInitExt};
 
 use app::App;
 use repo::Repo;
@@ -19,6 +22,10 @@ struct Args {
 }
 
 fn main() -> io::Result<()> {
+    if let Ok(log_level) = env::var("RUST_LOG") && log_level == "debug" {
+        init_logging();
+    }
+
     let args = Args::parse();
 
     let repo = match Repo::new() {
@@ -32,4 +39,17 @@ fn main() -> io::Result<()> {
 
     ratatui::restore();
     app_result
+}
+
+fn init_logging() {
+    let file = File::create("debug.log").expect("could not create log file");
+
+    tracing_subscriber::registry()
+        .with(EnvFilter::from_default_env())
+        .with(
+            fmt::layer()
+                .with_writer(BoxMakeWriter::new(file))
+                .with_ansi(false)
+        )
+        .init();
 }
