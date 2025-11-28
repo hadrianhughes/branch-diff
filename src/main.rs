@@ -34,11 +34,16 @@ fn main() -> io::Result<()> {
     };
 
     let mut terminal = ratatui::init();
-    let app_result = App::new(repo, args.from, args.into)
-        .run(&mut terminal);
+    let mut app = match App::new(repo, args.from, args.into) {
+        Ok(a) => a,
+        Err(e) => panic!("{e}"),
+    };
+
+    let result = app.run(&mut terminal);
 
     ratatui::restore();
-    app_result
+
+    result
 }
 
 fn init_logging() {

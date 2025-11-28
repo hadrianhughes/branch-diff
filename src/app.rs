@@ -1,10 +1,11 @@
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::DefaultTerminal;
+use core::fmt;
 use std::io;
 
 use crate::ui::UI;
 use crate::state::{AppState, Direction, Pane};
-use crate::repo::Repo;
+use crate::repo::{Repo, RepoError};
 
 #[derive(Debug)]
 pub struct App {
@@ -12,12 +13,22 @@ pub struct App {
     repository: Repo,
 }
 
+#[derive(Debug)]
+pub enum AppError {
+    Repo(RepoError),
+    NoCommits,
+}
+
 impl App {
-    pub fn new(repository: Repo, from_branch: String, into_branch: String) -> Self {
-        let (commits, commits_order) = match repository.commits_in_range(into_branch.as_str(), from_branch.as_str()) {
-            Ok(cs) => cs,
-            Err(e) => panic!("Couldn't get commits: {}", e),
-        };
+    pub fn new(repository: Repo, from_branch: String, into_branch: String) -> Result<Self, AppError> {
+        let (commits, commits_order) = repository.commits_in_range(
+            into_branch.as_str(),
+            from_branch.as_str(),
+        )?;
+
+        if commits.is_empty() {
+            return Err(AppError::NoCommits)
+        }
 
         let state = AppState::new(
             from_branch.clone(),
@@ -27,7 +38,7 @@ impl App {
             Vec::new(),
         );
 
-        App { state, repository }
+        Ok(App { state, repository })
     }
 
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
@@ -57,5 +68,29 @@ impl App {
             KeyCode::Enter => self.state.select(),
             _ => {},
         }
+    }
+}
+
+impl fmt::Display for AppError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AppError::Repo(e) => write!(f, "AppError: {}", e),
+            AppError::NoCommits => write!(f, "no commits to display"),
+        }
+    }
+}
+
+impl std::error::Error for AppError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            AppError::Repo(e) => Some(e),
+            AppError::NoCommits => None,
+        }
+    }
+}
+
+impl From<RepoError> for AppError {
+    fn from(e: RepoError) -> Self {
+        AppError::Repo(e)
     }
 }
