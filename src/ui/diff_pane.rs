@@ -21,16 +21,18 @@ impl<'a> StatefulWidget for &'a DiffPane {
      * Rows are the visual lines in the UI that are rendered into.
      * */
     fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
-        let commit = state.get_selected_commit();
-
         let outer = Block::new().padding(Padding::uniform(1));
         let inner = outer.inner(area);
+
+        state.scroll_height = inner.height;
 
         outer.render(area, buf);
 
         let mut rows_filled: i16 = 0;
         let mut lines_consumed: i16 = 0;
         let mut files_rendered: i16 = 0;
+
+        let commit = state.get_selected_commit();
 
         for (file_name, diff_lines) in &commit.file_diffs {
             if rows_filled >= (inner.height as i16) {

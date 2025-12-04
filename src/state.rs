@@ -11,6 +11,7 @@ pub struct AppState {
     pub selected_pane: Pane,
     pub selected_commit: usize,
     pub scroll_position: i16,
+    pub scroll_height: u16,
 }
 
 #[derive(Debug)]
@@ -65,6 +66,7 @@ impl AppState {
             selected_pane: Pane::Diff,
             selected_commit: 0,
             scroll_position: 0,
+            scroll_height: 0,
         }
     }
 
