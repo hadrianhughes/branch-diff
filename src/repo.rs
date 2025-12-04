@@ -1,4 +1,5 @@
 use git2::{DiffFormat, Repository};
+use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::env;
 use std::fmt;
@@ -67,7 +68,7 @@ impl Repo {
         Ok((commits, commits_order))
     }
 
-    fn get_commit_diff(&self, commit: git2::Commit) -> Result<HashMap<String, Vec<Change>>, RepoError> {
+    fn get_commit_diff(&self, commit: git2::Commit) -> Result<BTreeMap<String, Vec<Change>>, RepoError> {
         let tree = commit.tree()?;
 
         let parent_tree = if commit.parent_count() > 0 {
@@ -78,7 +79,7 @@ impl Repo {
 
         let diff = self.repository.diff_tree_to_tree(parent_tree.as_ref(), Some(&tree), None)?;
 
-        let mut file_diffs: HashMap<String, Vec<Change>> = HashMap::new();
+        let mut file_diffs: BTreeMap<String, Vec<Change>> = BTreeMap::new();
 
         let result = diff.print(DiffFormat::Patch, |delta, _hunk, line| {
             let Ok(text) = std::str::from_utf8(line.content()) else {
