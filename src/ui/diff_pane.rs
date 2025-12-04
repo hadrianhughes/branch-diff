@@ -41,29 +41,30 @@ impl<'a> StatefulWidget for &'a DiffPane {
 
             let diff_len = diff_lines.len() as i16;
 
-            let truncates = diff_len + rows_filled > (inner.height as i16);
-
-            let content_height: i16 = if truncates {
-                (inner.height as i16) - rows_filled
-            } else { diff_len };
-
-            if lines_consumed + content_height <= state.scroll_position {
-                lines_consumed += content_height;
+            if lines_consumed + diff_len <= state.scroll_position {
+                lines_consumed += diff_len;
                 continue;
             }
 
-            let title = Line::from(file_name.clone()).bold();
-
-            let block = Block::bordered()
-                .title(title)
-                .border_set(border::PLAIN);
-
             let scrolling_inside = files_rendered == 0 && state.scroll_position > 0;
+
             let start_idx = if scrolling_inside {
                 std::cmp::max(state.scroll_position - lines_consumed, 0)
             } else { 0 };
 
-            let num_rows = content_height - start_idx;
+            let truncates = if scrolling_inside {
+                diff_len - start_idx + lines_consumed
+            } else {
+                diff_len + rows_filled
+            } > (inner.height as i16);
+
+            let num_rows = if truncates && scrolling_inside {
+                std::cmp::min(diff_len - start_idx, inner.height as i16)
+            } else if truncates {
+                (inner.height as i16) - rows_filled
+            } else {
+                diff_len - start_idx
+            };
 
             let lines: Vec<Line> = diff_lines
                 .iter()
@@ -98,6 +99,12 @@ impl<'a> StatefulWidget for &'a DiffPane {
                 width: inner.width,
             };
 
+            let title = Line::from(file_name.clone()).bold();
+
+            let block = Block::bordered()
+                .title(title)
+                .border_set(border::PLAIN);
+
             Paragraph::new(lines)
                 .block(block)
                 .render(space, buf);
@@ -105,7 +112,7 @@ impl<'a> StatefulWidget for &'a DiffPane {
             rows_filled += outer_height as i16;
             files_rendered += 1;
             if scrolling_inside {
-                lines_consumed += content_height - num_rows;
+                lines_consumed += diff_len - num_rows;
             }
         }
     }

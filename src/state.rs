@@ -98,7 +98,7 @@ impl AppState {
                         let commit = self.get_selected_commit();
 
                         let scroll_bottom = self.scroll_position + self.scroll_height;
-                        if scroll_bottom < (commit.diff_len as i16) - 1 {
+                        if scroll_bottom < commit.diff_len as i16 {
                             self.scroll_position += 1;
                         }
                     },
