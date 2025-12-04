@@ -43,9 +43,9 @@ impl App {
 
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
         while self.state.exit == false {
-            let mut ui = UI::new(&self.state);
+            let mut ui = UI::default();
 
-            terminal.draw(|frame| ui.render(frame))?;
+            terminal.draw(|frame| ui.render(frame, &mut self.state))?;
 
             match event::read()? {
                 Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {

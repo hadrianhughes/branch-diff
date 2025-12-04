@@ -2,28 +2,20 @@ use ratatui::{
     buffer::Buffer,
     layout::Rect,
     text::{Line, Span},
-    widgets::{Paragraph, Widget},
+    widgets::{Paragraph, StatefulWidget, Widget},
 };
 
-#[derive(Debug)]
-pub struct BottomBar<'a> {
-    from_branch: &'a String,
-    into_branch: &'a String,
-}
+use crate::state::AppState;
 
-impl<'a> BottomBar<'a> {
-    pub fn new(from_branch: &'a String, into_branch: &'a String) -> Self {
-        BottomBar {
-            from_branch,
-            into_branch,
-        }
-    }
-}
+#[derive(Debug, Default)]
+pub struct BottomBar {}
 
-impl<'a> Widget for &BottomBar<'a> {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        let from_span = Span::from(self.from_branch.as_str());
-        let into_span = Span::from(self.into_branch.as_str());
+impl<'a> StatefulWidget for &BottomBar {
+    type State = AppState;
+
+    fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
+        let from_span = Span::from(state.from_branch.as_str());
+        let into_span = Span::from(state.into_branch.as_str());
 
         let bar = Line::from(vec![
             into_span,

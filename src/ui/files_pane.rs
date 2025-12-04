@@ -4,28 +4,25 @@ use ratatui::{
     style::Stylize,
     symbols::border,
     text::Line,
-    widgets::{Block, Paragraph, Widget},
+    widgets::{Block, Paragraph, StatefulWidget, Widget},
 };
 
-#[derive(Debug)]
-pub struct FilesPane<'a> {
-    files: &'a Vec<String>,
-    has_focus: bool,
-}
+use crate::state::{AppState, Pane};
 
-impl<'a> FilesPane<'a> {
-    pub fn new(files: &'a Vec<String>, has_focus: bool) -> Self {
-        FilesPane { files, has_focus }
-    }
-}
+#[derive(Debug, Default)]
+pub struct FilesPane {}
 
-impl<'a> Widget for &FilesPane<'a> {
-    fn render(self, area: Rect, buf: &mut Buffer) {
+impl<'a> StatefulWidget for &'a FilesPane {
+    type State = AppState;
+
+    fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
         let title = Line::from(" Files ".bold());
+
+        let has_focus = matches!(state.selected_pane, Pane::Files);
 
         let block = Block::bordered()
             .title(title.centered())
-            .border_set(if self.has_focus { border::THICK } else { border::PLAIN });
+            .border_set(if has_focus { border::THICK } else { border::PLAIN });
 
         Paragraph::new("Files go here")
             .block(block)

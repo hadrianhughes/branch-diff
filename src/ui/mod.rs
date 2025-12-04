@@ -3,7 +3,7 @@ pub mod diff_pane;
 pub mod files_pane;
 pub mod commits_pane;
 
-use crate::state::{AppState, Pane};
+use crate::state::AppState;
 use crate::ui::{
     bottom_bar::BottomBar,
     diff_pane::DiffPane,
@@ -16,35 +16,16 @@ use ratatui::{
     Frame,
 };
 
-#[derive(Debug)]
-pub struct UI<'a> {
-    diff_pane: DiffPane<'a>,
-    files_pane: FilesPane<'a>,
-    commits_pane: CommitsPane<'a>,
-    bottom_bar: BottomBar<'a>,
+#[derive(Debug, Default)]
+pub struct UI {
+    diff_pane: DiffPane,
+    files_pane: FilesPane,
+    commits_pane: CommitsPane,
+    bottom_bar: BottomBar,
 }
 
-impl<'a> UI<'a> {
-    pub fn new(state: &'a AppState) -> Self {
-        let commit = state.get_selected_commit();
-
-        UI {
-            diff_pane: DiffPane::new(&commit.file_diffs, state.scroll_position),
-            files_pane: FilesPane::new(&state.files, matches!(state.selected_pane, Pane::Files)),
-            commits_pane: CommitsPane::new(
-                &state.commits,
-                &state.commits_order,
-                matches!(state.selected_pane, Pane::Commits),
-                state.selected_commit
-            ),
-            bottom_bar: BottomBar::new(
-                &state.from_branch,
-                &state.into_branch,
-            ),
-        }
-    }
-
-    pub fn render(&mut self, frame: &mut Frame) {
+impl<'a> UI {
+    pub fn render(&mut self, frame: &mut Frame, state: &mut AppState) {
         let outer_layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints(vec![
@@ -69,9 +50,9 @@ impl<'a> UI<'a> {
             ])
             .split(main_layout[1]);
 
-        frame.render_widget(&self.diff_pane, main_layout[0]);
-        frame.render_widget(&self.files_pane, right_layout[0]);
-        frame.render_widget(&mut self.commits_pane, right_layout[1]);
-        frame.render_widget(&self.bottom_bar, outer_layout[1]);
+        frame.render_stateful_widget(&self.diff_pane, main_layout[0], state);
+        frame.render_stateful_widget(&self.files_pane, right_layout[0], state);
+        frame.render_stateful_widget(&self.commits_pane, right_layout[1], state);
+        frame.render_stateful_widget(&self.bottom_bar, outer_layout[1], state);
     }
 }

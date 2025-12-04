@@ -1,23 +1,15 @@
-use std::collections::HashMap;
 use ratatui::{
-    buffer::Buffer, layout::Rect, style::{Color, Style, Stylize}, symbols::border, text::Line, widgets::{Block, Padding, Paragraph, Widget}
+    buffer::Buffer, layout::Rect, style::{Color, Style, Stylize}, symbols::border, text::Line, widgets::{Block, Padding, Paragraph, StatefulWidget, Widget}
 };
 
-use crate::state::{Change, ChangeKind};
+use crate::state::{AppState, ChangeKind};
 
-#[derive(Debug)]
-pub struct DiffPane<'a> {
-    file_diffs: &'a HashMap<String, Vec<Change>>,
-    scroll_position: i16,
-}
+#[derive(Debug, Default)]
+pub struct DiffPane {}
 
-impl<'a> DiffPane<'a> {
-    pub fn new(file_diffs: &'a HashMap<String, Vec<Change>>, scroll_position: i16) -> Self {
-        DiffPane { file_diffs, scroll_position }
-    }
-}
+impl<'a> StatefulWidget for &'a DiffPane {
+    type State = AppState;
 
-impl<'a> Widget for &DiffPane<'a> {
     /*
      * This function implements list virtualisation for scrolling.
      * Files are not rendered until the number of lines consumed is equal to the scroll position.
@@ -28,7 +20,9 @@ impl<'a> Widget for &DiffPane<'a> {
      * Lines are defined to be the actual lines of content in the diffs.
      * Rows are the visual lines in the UI that are rendered into.
      * */
-    fn render(self, area: Rect, buf: &mut Buffer) {
+    fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
+        let commit = state.get_selected_commit();
+
         let outer = Block::new().padding(Padding::uniform(1));
         let inner = outer.inner(area);
 
@@ -38,7 +32,7 @@ impl<'a> Widget for &DiffPane<'a> {
         let mut lines_consumed: i16 = 0;
         let mut files_rendered: i16 = 0;
 
-        for (file_name, diff_lines) in self.file_diffs {
+        for (file_name, diff_lines) in &commit.file_diffs {
             if rows_filled >= (inner.height as i16) {
                 break;
             }
@@ -51,7 +45,7 @@ impl<'a> Widget for &DiffPane<'a> {
                 (inner.height as i16) - rows_filled
             } else { diff_len };
 
-            if lines_consumed + content_height <= self.scroll_position {
+            if lines_consumed + content_height <= state.scroll_position {
                 lines_consumed += content_height;
                 continue;
             }
@@ -62,9 +56,9 @@ impl<'a> Widget for &DiffPane<'a> {
                 .title(title)
                 .border_set(border::PLAIN);
 
-            let scrolling_inside = files_rendered == 0 && self.scroll_position > 0;
+            let scrolling_inside = files_rendered == 0 && state.scroll_position > 0;
             let start_idx = if scrolling_inside {
-                std::cmp::max(self.scroll_position - lines_consumed, 0)
+                std::cmp::max(state.scroll_position - lines_consumed, 0)
             } else { 0 };
 
             let num_rows = content_height - start_idx;
