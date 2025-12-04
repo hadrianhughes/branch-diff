@@ -24,7 +24,7 @@ impl<'a> StatefulWidget for &'a DiffPane {
         let outer = Block::new().padding(Padding::uniform(1));
         let inner = outer.inner(area);
 
-        state.scroll_height = inner.height;
+        state.scroll_height = inner.height as i16;
 
         outer.render(area, buf);
 

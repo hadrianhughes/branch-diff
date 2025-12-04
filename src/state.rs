@@ -11,7 +11,7 @@ pub struct AppState {
     pub selected_pane: Pane,
     pub selected_commit: usize,
     pub scroll_position: i16,
-    pub scroll_height: u16,
+    pub scroll_height: i16,
 }
 
 #[derive(Debug)]
@@ -97,7 +97,8 @@ impl AppState {
                     Direction::Down => {
                         let commit = self.get_selected_commit();
 
-                        if self.scroll_position < (commit.diff_len as i16) - 1 {
+                        let scroll_bottom = self.scroll_position + self.scroll_height;
+                        if scroll_bottom < (commit.diff_len as i16) - 1 {
                             self.scroll_position += 1;
                         }
                     },
