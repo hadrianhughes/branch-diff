@@ -2,7 +2,7 @@ use ratatui::{
     buffer::Buffer, layout::{Constraint, Direction, Layout, Rect}, style::{Color, Style, Stylize}, symbols::border, text::Line, widgets::{Block, Padding, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState, StatefulWidget, Widget}
 };
 
-use crate::state::{AppState, ChangeKind};
+use crate::state::{AppState, ChangeKind, Commit};
 
 #[derive(Debug, Default)]
 pub struct DiffPane {}
@@ -30,60 +30,69 @@ impl<'a> StatefulWidget for &'a DiffPane {
 
         let commit = state.get_selected_commit();
 
-        let render_area = if (commit.diff_len as i16) - (inner.height as i16) > 0 {
-            let layout_parts = Layout::default()
-                .direction(Direction::Horizontal)
-                .constraints([
-                    Constraint::Fill(1),
-                    Constraint::Length(1),
-                ])
-                .split(inner);
+        let render_area = DiffPane::render_scroll_layout(commit.diff_len, state.scroll_position, inner, buf);
+        DiffPane::render_commit_diff(commit, state.scroll_position, render_area, buf);
+    }
+}
 
-            let mut scroll_state = ScrollbarState::new(((commit.diff_len as u16) - inner.height) as usize)
-                .position(state.scroll_position as usize);
+impl DiffPane {
+    fn render_scroll_layout(diff_len: usize, scroll_position: i16, render_area: Rect, buf: &mut Buffer) -> Rect {
+        if (diff_len as i16) - (render_area.height as i16) <= 0 {
+            return render_area;
+        }
 
-            Scrollbar::new(ScrollbarOrientation::VerticalRight)
-                .begin_symbol(Some("↑"))
-                .end_symbol(Some("↓"))
-                .render(layout_parts[1], buf, &mut scroll_state);
+        let layout_parts = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([
+                Constraint::Fill(1),
+                Constraint::Length(1),
+            ])
+            .split(render_area);
 
-            layout_parts[0]
-        } else {
-            inner
-        };
+        let mut scroll_state = ScrollbarState::new(((diff_len as i16) - (render_area.height as i16)) as usize)
+            .position(scroll_position as usize);
 
+        Scrollbar::new(ScrollbarOrientation::VerticalRight)
+            .begin_symbol(Some("↑"))
+            .end_symbol(Some("↓"))
+            .render(layout_parts[1], buf, &mut scroll_state);
+
+        layout_parts[0]
+    }
+
+    fn render_commit_diff(commit: &Commit, scroll_position: i16, render_area: Rect, buf: &mut Buffer) {
         let mut rows_filled: i16 = 0;
         let mut lines_consumed: i16 = 0;
         let mut files_rendered: i16 = 0;
 
         for (file_name, diff_lines) in &commit.file_diffs {
-            if rows_filled >= (inner.height as i16) {
+            if rows_filled >= (render_area.height as i16) {
                 break;
             }
 
             let diff_len = diff_lines.len() as i16;
 
-            if lines_consumed + diff_len <= state.scroll_position {
+            if lines_consumed + diff_len <= scroll_position {
                 lines_consumed += diff_len;
                 continue;
             }
 
-            let scrolling_inside = files_rendered == 0 && state.scroll_position > 0;
+            let scrolling_inside = files_rendered == 0 && scroll_position > 0;
 
             let start_idx = if scrolling_inside {
-                std::cmp::max(state.scroll_position - lines_consumed, 0)
+                std::cmp::max(scroll_position - lines_consumed, 0)
             } else { 0 };
 
             let truncates = if scrolling_inside {
                 diff_len - start_idx + lines_consumed
             } else {
                 diff_len + rows_filled
-            } > (inner.height as i16);
+            } > (render_area.height as i16);
 
             let num_rows = if truncates && scrolling_inside {
-                std::cmp::min(diff_len - start_idx, inner.height as i16)
+                std::cmp::min(diff_len - start_idx, render_area.height as i16)
             } else if truncates {
-                (inner.height as i16) - rows_filled
+                (render_area.height as i16) - rows_filled
             } else {
                 diff_len - start_idx
             };
