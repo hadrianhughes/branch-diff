@@ -1,5 +1,5 @@
 use ratatui::{
-    buffer::Buffer, layout::Rect, style::{Color, Style, Stylize}, symbols::border, text::Line, widgets::{Block, Padding, Paragraph, StatefulWidget, Widget}
+    buffer::Buffer, layout::{Constraint, Direction, Layout, Rect}, style::{Color, Style, Stylize}, symbols::border, text::Line, widgets::{Block, Padding, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState, StatefulWidget, Widget}
 };
 
 use crate::state::{AppState, ChangeKind};
@@ -28,11 +28,33 @@ impl<'a> StatefulWidget for &'a DiffPane {
 
         outer.render(area, buf);
 
+        let commit = state.get_selected_commit();
+
+        let render_area = if (commit.diff_len as i16) - (inner.height as i16) > 0 {
+            let layout_parts = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([
+                    Constraint::Fill(1),
+                    Constraint::Length(1),
+                ])
+                .split(inner);
+
+            let mut scroll_state = ScrollbarState::new(((commit.diff_len as u16) - inner.height) as usize)
+                .position(state.scroll_position as usize);
+
+            Scrollbar::new(ScrollbarOrientation::VerticalRight)
+                .begin_symbol(Some("↑"))
+                .end_symbol(Some("↓"))
+                .render(layout_parts[1], buf, &mut scroll_state);
+
+            layout_parts[0]
+        } else {
+            inner
+        };
+
         let mut rows_filled: i16 = 0;
         let mut lines_consumed: i16 = 0;
         let mut files_rendered: i16 = 0;
-
-        let commit = state.get_selected_commit();
 
         for (file_name, diff_lines) in &commit.file_diffs {
             if rows_filled >= (inner.height as i16) {
@@ -93,10 +115,10 @@ impl<'a> StatefulWidget for &'a DiffPane {
             let outer_height = num_rows + 2;
 
             let space = Rect {
-                x: inner.x,
+                x: render_area.x,
                 y: rows_filled.try_into().expect("failed to cast height_filled as u16"),
                 height: outer_height.try_into().expect("failed to cast outer_height as u16"),
-                width: inner.width,
+                width: render_area.width,
             };
 
             let title = Line::from(file_name.clone()).bold();
