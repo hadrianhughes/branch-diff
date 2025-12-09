@@ -65,7 +65,7 @@ impl DiffPane {
         let mut lines_consumed: i16 = 0;
         let mut files_rendered: i16 = 0;
 
-        for (file_name, diff_lines) in &commit.file_diffs {
+        for (file_name, diff_lines) in commit.file_tree.iter_files() {
             if rows_filled >= (render_area.height as i16) {
                 break;
             }
@@ -130,7 +130,7 @@ impl DiffPane {
                 width: render_area.width,
             };
 
-            let title = Line::from(file_name.clone()).bold();
+            let title = Line::from(file_name).bold();
 
             let block = Block::bordered()
                 .title(title)

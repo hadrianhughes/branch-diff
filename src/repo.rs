@@ -1,10 +1,10 @@
 use git2::{DiffFormat, Repository};
-use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::env;
 use std::fmt;
 use std::io;
 
+use crate::file_tree::FileTree;
 use crate::state::Change;
 use crate::state::ChangeKind;
 use crate::state::Commit;
@@ -47,9 +47,9 @@ impl Repo {
                 Err(e) => {
                     return Err(e);
                 },
-                Ok(file_diffs) => {
-                    let diff_len = file_diffs
-                        .iter()
+                Ok(file_tree) => {
+                    let diff_len = file_tree
+                        .iter_files()
                         .map(|(_, changes)| { changes.len() })
                         .sum();
 
@@ -58,7 +58,7 @@ impl Repo {
                         hash,
                         message,
                         author,
-                        file_diffs,
+                        file_tree,
                         diff_len,
                     });
                 },
@@ -68,7 +68,7 @@ impl Repo {
         Ok((commits, commits_order))
     }
 
-    fn get_commit_diff(&self, commit: git2::Commit) -> Result<BTreeMap<String, Vec<Change>>, RepoError> {
+    fn get_commit_diff(&self, commit: git2::Commit) -> Result<FileTree, RepoError> {
         let tree = commit.tree()?;
 
         let parent_tree = if commit.parent_count() > 0 {
@@ -79,7 +79,17 @@ impl Repo {
 
         let diff = self.repository.diff_tree_to_tree(parent_tree.as_ref(), Some(&tree), None)?;
 
-        let mut file_diffs: BTreeMap<String, Vec<Change>> = BTreeMap::new();
+        let root_dir = match self.repository.workdir() {
+            Some(dir) => dir
+                .file_name()
+                .and_then(|name| name.to_str())
+                .unwrap_or("root"),
+            None => "root",
+        };
+
+        let mut file_tree = FileTree::new(root_dir);
+        let mut current_file_path = String::new();
+        let mut current_file_diff: Vec<Change> = Vec::new();
 
         let result = diff.print(DiffFormat::Patch, |delta, _hunk, line| {
             let Ok(text) = std::str::from_utf8(line.content()) else {
@@ -111,26 +121,28 @@ impl Repo {
                 return true;
             };
 
+            if file_path != current_file_path {
+                file_tree.insert_file(current_file_path.as_str(), std::mem::take(&mut current_file_diff));
+                current_file_path = file_path.to_string();
+                current_file_diff.clear();
+            }
+
             let change = Change {
                 text: text.to_string(),
                 kind: change_kind,
             };
 
-            if let Some(file_vec) = file_diffs.get_mut(file_path) {
-                file_vec.push(change);
-            } else {
-                let mut file_vec = Vec::new();
-                file_vec.push(change);
-                file_diffs.insert(file_path.to_string(), file_vec);
-            }
+            current_file_diff.push(change);
 
             true
         });
 
+        file_tree.insert_file(current_file_path.as_str(), current_file_diff);
+
         if let Err(e) = result {
             Err(RepoError::Git(e))
         } else {
-            Ok(file_diffs)
+            Ok(file_tree)
         }
     }
 }

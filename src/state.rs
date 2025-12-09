@@ -1,4 +1,6 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
+
+use crate::file_tree::FileTree;
 
 #[derive(Debug)]
 pub struct AppState {
@@ -19,7 +21,7 @@ pub struct Commit {
     pub hash: String,
     pub message: Option<String>,
     pub author: String,
-    pub file_diffs: BTreeMap<String, Vec<Change>>,
+    pub file_tree: FileTree,
     pub diff_len: usize,
 }
 

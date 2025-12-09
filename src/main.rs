@@ -1,4 +1,5 @@
 mod app;
+mod file_tree;
 mod repo;
 mod state;
 mod ui;
