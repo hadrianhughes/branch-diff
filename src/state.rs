@@ -12,6 +12,7 @@ pub struct AppState {
     pub files: Vec<String>,
     pub selected_pane: Pane,
     pub selected_commit: usize,
+    pub selected_file: usize,
     pub scroll_position: i16,
     pub scroll_height: i16,
 }
@@ -38,7 +39,7 @@ pub enum ChangeKind {
     Deletion = 2,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Pane {
     Diff = 0,
     Files = 1,
@@ -67,6 +68,7 @@ impl AppState {
             files,
             selected_pane: Pane::Diff,
             selected_commit: 0,
+            selected_file: 0,
             scroll_position: 0,
             scroll_height: 0,
         }
@@ -111,7 +113,18 @@ impl AppState {
                     },
                 }
             },
-            _ => {},
+            Pane::Files => {
+                match direction {
+                    Direction::Down => {
+                        self.selected_file += 1;
+                    },
+                    Direction::Up => {
+                        if self.selected_file > 0 {
+                            self.selected_file -= 1;
+                        }
+                    },
+                }
+            },
         }
     }
 

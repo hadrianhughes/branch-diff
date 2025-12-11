@@ -45,11 +45,18 @@ impl StatefulWidget for &FilesPane {
 
         {
             let mut list_state = ListState::default();
+
+            if state.selected_pane == Pane::Files {
+                list_state.select(Some(state.selected_file));
+            }
+
             StatefulWidget::render(&list, layout_parts[0], buf, &mut list_state);
         }
 
         {
-            let mut scroll_state = ScrollbarState::new(list.len());
+            let mut scroll_state = ScrollbarState::new(list.len())
+                .position(state.selected_file);
+
             Scrollbar::new(ScrollbarOrientation::VerticalRight)
                 .begin_symbol(Some("↑"))
                 .end_symbol(Some("↓"))
