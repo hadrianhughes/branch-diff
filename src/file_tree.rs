@@ -96,27 +96,27 @@ impl<'a> Iterator for FileTreeFilesIter<'a> {
 
 #[derive(Debug)]
 pub struct FileTreeIter<'a> {
-    stack: Vec<&'a FileTree>,
+    stack: Vec<(&'a FileTree, usize)>, // usize = depth
 }
 
 impl<'a> FileTreeIter<'a> {
     pub fn new(root: &'a FileTree) -> Self {
-        FileTreeIter { stack: vec![root] }
+        FileTreeIter { stack: vec![(root, 0)] }
     }
 }
 
 impl<'a> Iterator for FileTreeIter<'a> {
-    type Item = &'a FileTree;
+    type Item = (&'a FileTree, usize);
 
     fn next(&mut self) -> Option<Self::Item> {
-        let node = self.stack.pop()?;
+        let (node, depth) = self.stack.pop()?;
 
         if let FileTree::Directory { children, .. } = node {
             for child in children {
-                self.stack.push(child);
+                self.stack.push((child, depth + 1));
             }
         }
 
-        Some(node)
+        Some((node, depth))
     }
 }
