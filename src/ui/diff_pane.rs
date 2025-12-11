@@ -2,7 +2,7 @@ use ratatui::{
     buffer::Buffer, layout::{Constraint, Direction, Layout, Rect}, style::{Color, Style, Stylize}, symbols::border, text::Line, widgets::{Block, Padding, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState, StatefulWidget, Widget}
 };
 
-use crate::state::{AppState, ChangeKind, Commit};
+use crate::{file_tree::FileTreeFilesItem, state::{AppState, ChangeKind, Commit}};
 
 #[derive(Debug, Default)]
 pub struct DiffPane {}
@@ -65,12 +65,12 @@ impl DiffPane {
         let mut lines_consumed: i16 = 0;
         let mut files_rendered: i16 = 0;
 
-        for (file_name, diff_lines) in commit.file_tree.iter_files() {
+        for FileTreeFilesItem { name, changes, .. } in commit.file_tree.iter_files() {
             if rows_filled >= (render_area.height as i16) {
                 break;
             }
 
-            let diff_len = diff_lines.len() as i16;
+            let diff_len = changes.len() as i16;
 
             if lines_consumed + diff_len <= scroll_position {
                 lines_consumed += diff_len;
@@ -97,7 +97,7 @@ impl DiffPane {
                 diff_len - start_idx
             };
 
-            let lines: Vec<Line> = diff_lines
+            let lines: Vec<Line> = changes
                 .iter()
                 .skip(start_idx as usize)
                 .take(num_rows as usize)
@@ -130,7 +130,7 @@ impl DiffPane {
                 width: render_area.width,
             };
 
-            let title = Line::from(file_name).bold();
+            let title = Line::from(name).bold();
 
             let block = Block::bordered()
                 .title(title)

@@ -32,7 +32,7 @@ pub struct Change {
     pub kind: ChangeKind,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum ChangeKind {
     Context = 0,
     Insertion = 1,

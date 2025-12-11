@@ -1,13 +1,13 @@
 use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Direction, Layout, Rect},
-    style::{palette::tailwind::SLATE, Modifier, Style, Stylize},
+    style::{palette::tailwind::SLATE, Color, Modifier, Style, Stylize},
     symbols::border,
     text::Line,
     widgets::{Block, HighlightSpacing, List, ListItem, ListState, Scrollbar, ScrollbarOrientation, ScrollbarState, StatefulWidget, Widget},
 };
 
-use crate::{file_tree::FileTree, state::{AppState, Pane}};
+use crate::{file_tree::{FileChangeKind, FileTree, FileTreeItem}, state::{AppState, Pane}};
 
 #[derive(Debug, Default)]
 pub struct FilesPane {}
@@ -39,14 +39,24 @@ impl StatefulWidget for &FilesPane {
         let mut lines: Vec<ListItem> = Vec::new();
         let mut selectable_indices: Vec<usize> = Vec::new();
 
-        for (idx, (node, depth)) in commit.file_tree.iter().enumerate() {
+        for (idx, FileTreeItem { node, depth }) in commit.file_tree.iter().enumerate() {
             let indent = " ".repeat(depth * 2);
             let name = match node {
                 FileTree::Directory { name, .. } => format!(" / {name}"),
                 FileTree::File { name, .. } => format!(" {name}"),
             };
 
-            lines.push(ListItem::new(format!("{indent}{name}")));
+            let style = match node {
+                FileTree::Directory { .. } => Style::default(),
+                FileTree::File { change_kind, .. } => match change_kind {
+                    FileChangeKind::Change => Style::default(),
+                    FileChangeKind::Creation => Style::default().fg(Color::Green),
+                    FileChangeKind::Deletion => Style::default().fg(Color::Red),
+                },
+            };
+
+            let line = Line::styled(format!("{indent}{name}"), style);
+            lines.push(ListItem::new(line));
 
             if let FileTree::File { .. } = node {
                 selectable_indices.push(idx);

@@ -4,7 +4,9 @@ use std::env;
 use std::fmt;
 use std::io;
 
+use crate::file_tree::FileChangeKind;
 use crate::file_tree::FileTree;
+use crate::file_tree::FileTreeFilesItem;
 use crate::state::Change;
 use crate::state::ChangeKind;
 use crate::state::Commit;
@@ -50,7 +52,7 @@ impl Repo {
                 Ok(file_tree) => {
                     let diff_len = file_tree
                         .iter_files()
-                        .map(|(_, changes)| { changes.len() })
+                        .map(|FileTreeFilesItem { changes, .. }| { changes.len() })
                         .sum();
 
                     commits_order.push(hash.clone());
@@ -90,6 +92,7 @@ impl Repo {
         let mut file_tree = FileTree::new(root_dir);
         let mut current_file_path: Option<String> = None;
         let mut current_file_diff: Vec<Change> = Vec::new();
+        let mut current_change_kind: FileChangeKind = FileChangeKind::Creation;
 
         let result = diff.print(DiffFormat::Patch, |delta, _hunk, line| {
             let Ok(text) = std::str::from_utf8(line.content()) else {
@@ -122,11 +125,18 @@ impl Repo {
             };
 
             if let Some(cfp) = &current_file_path && file_path != cfp {
-                file_tree.insert_file(cfp.as_str(), std::mem::take(&mut current_file_diff));
+                file_tree.insert_file(
+                    cfp.as_str(),
+                    std::mem::take(&mut current_file_diff),
+                    current_change_kind,
+                );
+
                 current_file_diff.clear();
             }
 
             current_file_path = Some(file_path.to_string());
+
+            current_change_kind = Repo::update_file_change_kind(current_change_kind, change_kind);
 
             let change = Change {
                 text: text.to_string(),
@@ -140,13 +150,28 @@ impl Repo {
 
         file_tree.insert_file(
             current_file_path.unwrap().as_str(),
-            current_file_diff
+            current_file_diff,
+            current_change_kind,
         );
 
         if let Err(e) = result {
             Err(RepoError::Git(e))
         } else {
             Ok(file_tree)
+        }
+    }
+
+    fn update_file_change_kind(file_change_kind: FileChangeKind, line_change_kind: ChangeKind) -> FileChangeKind {
+        match file_change_kind {
+            FileChangeKind::Creation => match line_change_kind {
+                ChangeKind::Context | ChangeKind::Deletion => FileChangeKind::Change,
+                ChangeKind::Insertion => FileChangeKind::Creation,
+            },
+            FileChangeKind::Deletion => match line_change_kind {
+                ChangeKind::Context | ChangeKind::Insertion => FileChangeKind::Change,
+                ChangeKind::Deletion => FileChangeKind::Deletion,
+            },
+            FileChangeKind::Change => FileChangeKind::Change,
         }
     }
 }

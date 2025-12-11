@@ -9,7 +9,15 @@ pub enum FileTree {
     File {
         name: String,
         changes: Vec<Change>,
+        change_kind: FileChangeKind,
     },
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum FileChangeKind {
+    Creation = 0,
+    Deletion = 1,
+    Change = 2,
 }
 
 impl FileTree {
@@ -28,7 +36,7 @@ impl FileTree {
         FileTreeFilesIter::new(self)
     }
 
-    pub fn insert_file(&mut self, path: &str, changes: Vec<Change>) {
+    pub fn insert_file(&mut self, path: &str, changes: Vec<Change>, change_kind: FileChangeKind) {
         let mut segments = path.split('/').peekable();
         let mut current_tree = self;
 
@@ -36,7 +44,7 @@ impl FileTree {
             match current_tree {
                 Self::Directory { children, .. } => {
                     if segments.peek().is_none() {
-                        children.push(Self::File { name: seg.to_string(), changes });
+                        children.push(Self::File { name: seg.to_string(), changes, change_kind });
                         return;
                     }
 
@@ -74,8 +82,14 @@ impl<'a> FileTreeFilesIter<'a> {
     }
 }
 
+pub struct FileTreeFilesItem<'a> {
+    pub name: &'a str,
+    pub changes: &'a Vec<Change>,
+    pub change_kind: &'a FileChangeKind,
+}
+
 impl<'a> Iterator for FileTreeFilesIter<'a> {
-    type Item = (&'a str, &'a Vec<Change>);
+    type Item = FileTreeFilesItem<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(node) = self.stack.pop() {
@@ -85,8 +99,8 @@ impl<'a> Iterator for FileTreeFilesIter<'a> {
                         self.stack.push(child);
                     }
                 },
-                FileTree::File { name, changes } => {
-                    return Some((name, changes));
+                FileTree::File { name, changes, change_kind } => {
+                    return Some(FileTreeFilesItem { name, changes, change_kind });
                 }
             }
         }
@@ -105,8 +119,13 @@ impl<'a> FileTreeIter<'a> {
     }
 }
 
+pub struct FileTreeItem<'a> {
+    pub node: &'a FileTree,
+    pub depth: usize,
+}
+
 impl<'a> Iterator for FileTreeIter<'a> {
-    type Item = (&'a FileTree, usize);
+    type Item = FileTreeItem<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let (node, depth) = self.stack.pop()?;
@@ -117,6 +136,6 @@ impl<'a> Iterator for FileTreeIter<'a> {
             }
         }
 
-        Some((node, depth))
+        Some(FileTreeItem { node, depth })
     }
 }
