@@ -97,7 +97,7 @@ impl Repo {
             };
 
             let change_kind = match line.origin() {
-                ' ' => ChangeKind::Neutral,
+                ' ' => ChangeKind::Context,
                 '+' => ChangeKind::Insertion,
                 '-' => ChangeKind::Deletion,
                 _   => {
@@ -107,7 +107,7 @@ impl Repo {
 
             let Some(file_path) = ({
                 let path = match change_kind {
-                    ChangeKind::Insertion | ChangeKind::Neutral => delta.new_file().path(),
+                    ChangeKind::Insertion | ChangeKind::Context => delta.new_file().path(),
                     ChangeKind::Deletion => delta.old_file().path(),
                 };
 

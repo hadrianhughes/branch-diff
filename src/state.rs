@@ -34,7 +34,7 @@ pub struct Change {
 
 #[derive(Debug)]
 pub enum ChangeKind {
-    Neutral = 0,
+    Context = 0,
     Insertion = 1,
     Deletion = 2,
 }

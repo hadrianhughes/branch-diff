@@ -103,13 +103,13 @@ impl DiffPane {
                 .take(num_rows as usize)
                 .map(|change| {
                     let prefix = match change.kind {
-                        ChangeKind::Neutral => ' ',
+                        ChangeKind::Context => ' ',
                         ChangeKind::Insertion => '+',
                         ChangeKind::Deletion => '-',
                     };
 
                     let style = match change.kind {
-                        ChangeKind::Neutral => Style::default(),
+                        ChangeKind::Context => Style::default(),
                         ChangeKind::Insertion => Style::default()
                             .fg(Color::Green),
                         ChangeKind::Deletion => Style::default()
