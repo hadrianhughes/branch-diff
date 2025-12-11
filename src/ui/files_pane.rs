@@ -35,11 +35,27 @@ impl StatefulWidget for &FilesPane {
             .split(inner);
 
         let commit = state.get_selected_commit();
-        let items = render_file_tree(&commit.file_tree);
+
+        let mut lines: Vec<ListItem> = Vec::new();
+        let mut selectable_indices: Vec<usize> = Vec::new();
+
+        for (idx, (node, depth)) in commit.file_tree.iter().enumerate() {
+            let indent = " ".repeat(depth * 2);
+            let name = match node {
+                FileTree::Directory { name, .. } => format!(" / {name}"),
+                FileTree::File { name, .. } => format!(" {name}"),
+            };
+
+            lines.push(ListItem::new(format!("{indent}{name}")));
+
+            if let FileTree::File { .. } = node {
+                selectable_indices.push(idx);
+            }
+        }
 
         block.render(area, buf);
 
-        let list = List::new(items)
+        let list = List::new(lines)
             .highlight_style(Style::new().bg(SLATE.c600).add_modifier(Modifier::BOLD))
             .highlight_spacing(HighlightSpacing::Always);
 
@@ -47,14 +63,14 @@ impl StatefulWidget for &FilesPane {
             let mut list_state = ListState::default();
 
             if state.selected_pane == Pane::Files {
-                list_state.select(Some(state.selected_file));
+                list_state.select(Some(selectable_indices[state.selected_file]));
             }
 
             StatefulWidget::render(&list, layout_parts[0], buf, &mut list_state);
         }
 
         {
-            let mut scroll_state = ScrollbarState::new(list.len())
+            let mut scroll_state = ScrollbarState::new(selectable_indices.len())
                 .position(state.selected_file);
 
             Scrollbar::new(ScrollbarOrientation::VerticalRight)
@@ -63,21 +79,4 @@ impl StatefulWidget for &FilesPane {
                 .render(layout_parts[1], buf, &mut scroll_state)
         }
     }
-}
-
-fn render_file_tree<'a>(file_tree: &'a FileTree) -> Vec<ListItem<'a>> {
-    let mut file_tree_iter = file_tree.iter();
-    let mut lines: Vec<ListItem> = Vec::new();
-
-    while let Some((node, depth)) = file_tree_iter.next() {
-        let indent = " ".repeat(depth * 2);
-        let name = match node {
-            FileTree::Directory { name, .. } => format!(" / {name}"),
-            FileTree::File { name, .. } => format!(" {name}"),
-        };
-
-        lines.push(ListItem::new(format!("{indent}{name}")));
-    }
-
-    return lines;
 }

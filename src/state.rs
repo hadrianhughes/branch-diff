@@ -118,7 +118,7 @@ impl AppState {
                     Direction::Down => {
                         let commit = self.get_selected_commit();
 
-                        if self.selected_file < commit.file_tree.iter().count() - 1 {
+                        if self.selected_file < commit.file_tree.iter_files().count() - 1 {
                             self.selected_file += 1;
                         }
                     },
@@ -136,6 +136,7 @@ impl AppState {
         if index < self.commits.len() {
             self.selected_commit = index;
             self.scroll_position = 0;
+            self.selected_file = 0;
         } else {
             tracing::error!("attempted to select an out of bounds commit index: {index}");
         }
