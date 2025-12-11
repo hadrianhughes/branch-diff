@@ -41,21 +41,31 @@ impl StatefulWidget for &FilesPane {
 
         for (idx, FileTreeItem { node, depth }) in commit.file_tree.iter().enumerate() {
             let indent = " ".repeat(depth * 2);
+
+            let prefix = match node {
+                FileTree::Directory { .. } => '/',
+                FileTree::File { change_kind, .. } => match change_kind {
+                    FileChangeKind::Change => '*',
+                    FileChangeKind::Creation => '+',
+                    FileChangeKind::Deletion => '-',
+                },
+            };
+
             let name = match node {
-                FileTree::Directory { name, .. } => format!(" / {name}"),
-                FileTree::File { name, .. } => format!(" {name}"),
+                FileTree::Directory { name, .. } => name,
+                FileTree::File { name, .. } => name,
             };
 
             let style = match node {
                 FileTree::Directory { .. } => Style::default(),
                 FileTree::File { change_kind, .. } => match change_kind {
-                    FileChangeKind::Change => Style::default(),
+                    FileChangeKind::Change => Style::default().fg(Color::Yellow),
                     FileChangeKind::Creation => Style::default().fg(Color::Green),
                     FileChangeKind::Deletion => Style::default().fg(Color::Red),
                 },
             };
 
-            let line = Line::styled(format!("{indent}{name}"), style);
+            let line = Line::styled(format!("{indent}{prefix} {name}"), style);
             lines.push(ListItem::new(line));
 
             if let FileTree::File { .. } = node {

@@ -92,7 +92,7 @@ impl Repo {
         let mut file_tree = FileTree::new(root_dir);
         let mut current_file_path: Option<String> = None;
         let mut current_file_diff: Vec<Change> = Vec::new();
-        let mut current_change_kind: FileChangeKind = FileChangeKind::Creation;
+        let mut current_change_kind: Option<FileChangeKind> = None;
 
         let result = diff.print(DiffFormat::Patch, |delta, _hunk, line| {
             let Ok(text) = std::str::from_utf8(line.content()) else {
@@ -128,15 +128,15 @@ impl Repo {
                 file_tree.insert_file(
                     cfp.as_str(),
                     std::mem::take(&mut current_file_diff),
-                    current_change_kind,
+                    current_change_kind.expect("current_change_kind was None when trying to insert file"),
                 );
 
                 current_file_diff.clear();
+                current_change_kind = None;
             }
 
             current_file_path = Some(file_path.to_string());
-
-            current_change_kind = Repo::update_file_change_kind(current_change_kind, change_kind);
+            current_change_kind = Some(Repo::update_file_change_kind(current_change_kind, change_kind));
 
             let change = Change {
                 text: text.to_string(),
@@ -149,9 +149,9 @@ impl Repo {
         });
 
         file_tree.insert_file(
-            current_file_path.unwrap().as_str(),
+            current_file_path.expect("current_file_path was None when trying to insert file").as_str(),
             current_file_diff,
-            current_change_kind,
+            current_change_kind.expect("current_change_kind was None when trying to insert file"),
         );
 
         if let Err(e) = result {
@@ -161,17 +161,24 @@ impl Repo {
         }
     }
 
-    fn update_file_change_kind(file_change_kind: FileChangeKind, line_change_kind: ChangeKind) -> FileChangeKind {
+    fn update_file_change_kind(file_change_kind: Option<FileChangeKind>, line_change_kind: ChangeKind) -> FileChangeKind {
         match file_change_kind {
-            FileChangeKind::Creation => match line_change_kind {
-                ChangeKind::Context | ChangeKind::Deletion => FileChangeKind::Change,
-                ChangeKind::Insertion => FileChangeKind::Creation,
+            Some(kind) => match kind {
+                FileChangeKind::Creation => match line_change_kind {
+                    ChangeKind::Context | ChangeKind::Deletion => FileChangeKind::Change,
+                    ChangeKind::Insertion => FileChangeKind::Creation,
+                },
+                FileChangeKind::Deletion => match line_change_kind {
+                    ChangeKind::Context | ChangeKind::Insertion => FileChangeKind::Change,
+                    ChangeKind::Deletion => FileChangeKind::Deletion,
+                },
+                FileChangeKind::Change => FileChangeKind::Change,
             },
-            FileChangeKind::Deletion => match line_change_kind {
-                ChangeKind::Context | ChangeKind::Insertion => FileChangeKind::Change,
+            None => match line_change_kind {
+                ChangeKind::Context => FileChangeKind::Change,
+                ChangeKind::Insertion => FileChangeKind::Creation,
                 ChangeKind::Deletion => FileChangeKind::Deletion,
             },
-            FileChangeKind::Change => FileChangeKind::Change,
         }
     }
 }
