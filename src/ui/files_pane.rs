@@ -51,11 +51,6 @@ impl StatefulWidget for &FilesPane {
                 },
             };
 
-            let name = match node {
-                FileTree::Directory { name, .. } => name,
-                FileTree::File { name, .. } => name,
-            };
-
             let style = match node {
                 FileTree::Directory { .. } => Style::default(),
                 FileTree::File { change_kind, .. } => match change_kind {
@@ -65,7 +60,7 @@ impl StatefulWidget for &FilesPane {
                 },
             };
 
-            let line = Line::styled(format!("{indent}{prefix} {name}"), style);
+            let line = Line::styled(format!("{indent}{prefix} {}", node.name()), style);
             lines.push(ListItem::new(line));
 
             if let FileTree::File { .. } = node {

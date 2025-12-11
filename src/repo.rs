@@ -157,6 +157,7 @@ impl Repo {
         if let Err(e) = result {
             Err(RepoError::Git(e))
         } else {
+            file_tree.sort();
             Ok(file_tree)
         }
     }

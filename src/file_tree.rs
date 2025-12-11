@@ -36,6 +36,13 @@ impl FileTree {
         FileTreeFilesIter::new(self)
     }
 
+    pub fn name(&self) -> &String {
+        match self {
+            Self::Directory { name, .. } => name,
+            Self::File { name, .. } => name,
+        }
+    }
+
     pub fn insert_file(&mut self, path: &str, changes: Vec<Change>, change_kind: FileChangeKind) {
         let mut segments = path.split('/').peekable();
         let mut current_tree = self;
@@ -66,6 +73,17 @@ impl FileTree {
                 Self::File { .. } => {
                     panic!("encountered a `File` node for `current_tree` before last iteration");
                 },
+            }
+        }
+    }
+
+    pub fn sort(&mut self) {
+        if let Self::Directory { children, .. } = self {
+            children.sort_by(|a,b| a.name().cmp(&b.name()));
+            children.reverse();
+
+            for child in children {
+                child.sort();
             }
         }
     }
