@@ -88,7 +88,7 @@ impl Repo {
         };
 
         let mut file_tree = FileTree::new(root_dir);
-        let mut current_file_path = String::new();
+        let mut current_file_path: Option<String> = None;
         let mut current_file_diff: Vec<Change> = Vec::new();
 
         let result = diff.print(DiffFormat::Patch, |delta, _hunk, line| {
@@ -121,11 +121,12 @@ impl Repo {
                 return true;
             };
 
-            if file_path != current_file_path {
-                file_tree.insert_file(current_file_path.as_str(), std::mem::take(&mut current_file_diff));
-                current_file_path = file_path.to_string();
+            if let Some(cfp) = &current_file_path && file_path != cfp {
+                file_tree.insert_file(cfp.as_str(), std::mem::take(&mut current_file_diff));
                 current_file_diff.clear();
             }
+
+            current_file_path = Some(file_path.to_string());
 
             let change = Change {
                 text: text.to_string(),
@@ -137,7 +138,10 @@ impl Repo {
             true
         });
 
-        file_tree.insert_file(current_file_path.as_str(), current_file_diff);
+        file_tree.insert_file(
+            current_file_path.unwrap().as_str(),
+            current_file_diff
+        );
 
         if let Err(e) = result {
             Err(RepoError::Git(e))

@@ -116,7 +116,11 @@ impl AppState {
             Pane::Files => {
                 match direction {
                     Direction::Down => {
-                        self.selected_file += 1;
+                        let commit = self.get_selected_commit();
+
+                        if self.selected_file < commit.file_tree.iter().count() - 1 {
+                            self.selected_file += 1;
+                        }
                     },
                     Direction::Up => {
                         if self.selected_file > 0 {
