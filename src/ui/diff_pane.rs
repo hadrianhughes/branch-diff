@@ -31,7 +31,11 @@ impl<'a> StatefulWidget for &'a DiffPane {
         let commit = state.get_selected_commit();
 
         let render_area = DiffPane::render_scroll_layout(commit.diff_len, state.scroll_position, inner, buf);
-        DiffPane::render_commit_diff(commit, state.scroll_position, render_area, buf);
+        let files_rendered = DiffPane::render_commit_diff(commit, state.scroll_position, render_area, buf);
+
+        // multiply by 2 for top and bottom file borders
+        // add 2 for first and last file borders not included in inner.height
+        state.lines_rendered = (inner.height as i16) - (files_rendered as i16) * 2 + 2;
     }
 }
 
@@ -60,7 +64,7 @@ impl DiffPane {
         layout_parts[0]
     }
 
-    fn render_commit_diff(commit: &Commit, scroll_position: i16, render_area: Rect, buf: &mut Buffer) {
+    fn render_commit_diff(commit: &Commit, scroll_position: i16, render_area: Rect, buf: &mut Buffer) -> i16 {
         let mut rows_filled: i16 = 0;
         let mut lines_consumed: i16 = 0;
         let mut files_rendered: i16 = 0;
@@ -146,5 +150,7 @@ impl DiffPane {
                 lines_consumed += diff_len - num_rows;
             }
         }
+
+        files_rendered
     }
 }

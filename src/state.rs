@@ -7,14 +7,18 @@ pub struct AppState {
     pub exit: bool,
     pub from_branch: String,
     pub into_branch: String,
+
     pub commits: HashMap<String, Commit>,
     pub commits_order: Vec<String>,
     pub files: Vec<String>,
+
     pub selected_pane: Pane,
     pub selected_commit: usize,
     pub selected_file: usize,
+
     pub scroll_position: i16,
     pub scroll_height: i16,
+    pub lines_rendered: i16,
 }
 
 #[derive(Debug)]
@@ -71,6 +75,7 @@ impl AppState {
             selected_file: 0,
             scroll_position: 0,
             scroll_height: 0,
+            lines_rendered: 0,
         }
     }
 
@@ -101,7 +106,7 @@ impl AppState {
                     Direction::Down => {
                         let commit = self.get_selected_commit();
 
-                        let scroll_bottom = self.scroll_position + self.scroll_height;
+                        let scroll_bottom = self.scroll_position + self.lines_rendered;
                         if scroll_bottom < commit.diff_len as i16 {
                             self.scroll_position += 1;
                         }
@@ -160,12 +165,13 @@ impl AppState {
                     None => (0, 0),
                 };
 
-                let scroll_bottom = file_scroll_start + self.scroll_height;
+                let scroll_bottom = file_scroll_start + self.lines_rendered;
 
                 self.scroll_position = if scroll_bottom < commit.diff_len as i16 {
                     file_scroll_start
                 } else {
-                    file_scroll_start + file_diff_len - self.scroll_height
+                    let non_content_lines = self.scroll_height - self.lines_rendered;
+                    file_scroll_start + file_diff_len - self.lines_rendered + non_content_lines
                 };
 
                 self.select_pane(Pane::Diff);
