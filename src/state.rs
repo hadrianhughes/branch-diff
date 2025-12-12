@@ -151,6 +151,25 @@ impl AppState {
             Pane::Commits => {
                 self.select_pane(Pane::Diff);
             },
+            Pane::Files => {
+                let commit = self.get_selected_commit();
+                let file = commit.file_tree.iter_files().nth(self.selected_file);
+
+                let (file_scroll_start, file_diff_len) = match file {
+                    Some(f) => (f.scroll_start as i16, f.changes.len() as i16),
+                    None => (0, 0),
+                };
+
+                let scroll_bottom = file_scroll_start + self.scroll_height;
+
+                self.scroll_position = if scroll_bottom < commit.diff_len as i16 {
+                    file_scroll_start
+                } else {
+                    file_scroll_start + file_diff_len - self.scroll_height
+                };
+
+                self.select_pane(Pane::Diff);
+            },
             _ => {},
         }
     }

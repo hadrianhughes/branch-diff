@@ -90,9 +90,11 @@ impl Repo {
         };
 
         let mut file_tree = FileTree::new(root_dir);
-        let mut current_file_path: Option<String> = None;
-        let mut current_file_diff: Vec<Change> = Vec::new();
-        let mut current_change_kind: Option<FileChangeKind> = None;
+        let mut previous_file_path: Option<String> = None;
+        let mut previous_file_diff: Vec<Change> = Vec::new();
+        let mut previous_change_kind: Option<FileChangeKind> = None;
+        let mut next_scroll_start: usize = 0;
+        let mut line_count: usize = 0;
 
         let result = diff.print(DiffFormat::Patch, |delta, _hunk, line| {
             let Ok(text) = std::str::from_utf8(line.content()) else {
@@ -124,34 +126,38 @@ impl Repo {
                 return true;
             };
 
-            if let Some(cfp) = &current_file_path && file_path != cfp {
+            if let Some(cfp) = &previous_file_path && file_path != cfp {
                 file_tree.insert_file(
                     cfp.as_str(),
-                    std::mem::take(&mut current_file_diff),
-                    current_change_kind.expect("current_change_kind was None when trying to insert file"),
+                    std::mem::take(&mut previous_file_diff),
+                    previous_change_kind.expect("previous_change_kind was None when trying to insert file"),
+                    next_scroll_start,
                 );
 
-                current_file_diff.clear();
-                current_change_kind = None;
+                previous_file_diff.clear();
+                previous_change_kind = None;
+                next_scroll_start = line_count;
             }
 
-            current_file_path = Some(file_path.to_string());
-            current_change_kind = Some(Repo::update_file_change_kind(current_change_kind, change_kind));
+            previous_file_path = Some(file_path.to_string());
+            previous_change_kind = Some(Repo::update_file_change_kind(previous_change_kind, change_kind));
+            line_count += 1;
 
             let change = Change {
                 text: text.to_string(),
                 kind: change_kind,
             };
 
-            current_file_diff.push(change);
+            previous_file_diff.push(change);
 
             true
         });
 
         file_tree.insert_file(
-            current_file_path.expect("current_file_path was None when trying to insert file").as_str(),
-            current_file_diff,
-            current_change_kind.expect("current_change_kind was None when trying to insert file"),
+            previous_file_path.expect("previous_file_path was None when trying to insert file").as_str(),
+            previous_file_diff,
+            previous_change_kind.expect("previous_change_kind was None when trying to insert file"),
+            next_scroll_start,
         );
 
         if let Err(e) = result {
