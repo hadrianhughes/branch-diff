@@ -35,7 +35,6 @@ impl App {
             into_branch.clone(),
             commits,
             commits_order,
-            Vec::new(),
         );
 
         Ok(App { state, repository })
