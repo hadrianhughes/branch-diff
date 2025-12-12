@@ -134,6 +134,20 @@ impl AppState {
         }
     }
 
+    pub fn jump_hunk(&mut self, direction: Direction) {
+        match direction {
+            Direction::Down => {
+                let commit = self.get_selected_commit();
+                let next_hunk = commit.file_tree.get_next_hunk(self.scroll_position.try_into().expect("failed to cast scroll_position from i16 to usize"));
+
+                if let Some(hunk_idx) = next_hunk {
+                    self.scroll_position = hunk_idx as i16;
+                }
+            },
+            Direction::Up => {},
+        }
+    }
+
     pub fn select_commit(&mut self, index: usize) {
         if index < self.commits.len() {
             self.selected_commit = index;

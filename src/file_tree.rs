@@ -11,6 +11,7 @@ pub enum FileTree {
         changes: Vec<Change>,
         change_kind: FileChangeKind,
         scroll_start: usize,
+        hunks: Vec<usize>,
     },
 }
 
@@ -44,7 +45,14 @@ impl FileTree {
         FileTreeFilesIter::new(self)
     }
 
-    pub fn insert_file(&mut self, path: &str, changes: Vec<Change>, change_kind: FileChangeKind, scroll_start: usize) {
+    pub fn insert_file(
+        &mut self,
+        path: &str,
+        changes: Vec<Change>,
+        change_kind: FileChangeKind,
+        hunks: Vec<usize>,
+        scroll_start: usize,
+    ) {
         let mut segments = path.split('/').peekable();
         let mut current_tree = self;
 
@@ -52,7 +60,13 @@ impl FileTree {
             match current_tree {
                 Self::Directory { children, .. } => {
                     if segments.peek().is_none() {
-                        children.push(Self::File { name: seg.to_string(), changes, change_kind, scroll_start });
+                        children.push(Self::File {
+                            name: seg.to_string(),
+                            changes,
+                            change_kind,
+                            scroll_start,
+                            hunks,
+                        });
                         return;
                     }
 
@@ -88,6 +102,22 @@ impl FileTree {
             }
         }
     }
+
+    pub fn get_next_hunk(&self, start_at: usize) -> Option<usize> {
+        let mut prev_hunk_idx = 0;
+
+        for node in self.iter_files() {
+            for hunk_idx in node.hunks {
+                if prev_hunk_idx <= start_at && *hunk_idx > start_at {
+                    return Some(*hunk_idx);
+                }
+
+                prev_hunk_idx = *hunk_idx;
+            }
+        }
+
+        None
+    }
 }
 
 #[derive(Debug)]
@@ -106,6 +136,7 @@ pub struct FileTreeFilesItem<'a> {
     pub name: &'a str,
     pub changes: &'a Vec<Change>,
     pub change_kind: &'a FileChangeKind,
+    pub hunks: &'a Vec<usize>,
     pub scroll_start: usize,
 }
 
@@ -120,8 +151,20 @@ impl<'a> Iterator for FileTreeFilesIter<'a> {
                         self.stack.push(child);
                     }
                 },
-                FileTree::File { name, changes, change_kind, scroll_start } => {
-                    return Some(FileTreeFilesItem { name, changes, change_kind, scroll_start: *scroll_start });
+                FileTree::File {
+                    name,
+                    changes,
+                    change_kind,
+                    hunks,
+                    scroll_start,
+                } => {
+                    return Some(FileTreeFilesItem {
+                        name,
+                        changes,
+                        change_kind,
+                        hunks,
+                        scroll_start: *scroll_start,
+                    });
                 }
             }
         }

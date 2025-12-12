@@ -92,14 +92,23 @@ impl Repo {
         let mut file_tree = FileTree::new(root_dir);
         let mut previous_file_path: Option<String> = None;
         let mut previous_file_diff: Vec<Change> = Vec::new();
+        let mut previous_hunk_start: Option<u32> = None;
+        let mut hunks: Vec<usize> = Vec::new();
         let mut previous_change_kind: Option<FileChangeKind> = None;
         let mut next_scroll_start: usize = 0;
         let mut line_count: usize = 0;
 
-        let result = diff.print(DiffFormat::Patch, |delta, _hunk, line| {
+        let result = diff.print(DiffFormat::Patch, |delta, hunk, line| {
             let Ok(text) = std::str::from_utf8(line.content()) else {
                 return true;
             };
+
+            if let Some(h) = hunk {
+                if previous_hunk_start.map_or(true, |start| h.new_start() != start) {
+                    hunks.push(previous_file_diff.len());
+                    previous_hunk_start = Some(h.new_start());
+                }
+            }
 
             let change_kind = match line.origin() {
                 ' ' => ChangeKind::Context,
@@ -131,10 +140,12 @@ impl Repo {
                     cfp.as_str(),
                     std::mem::take(&mut previous_file_diff),
                     previous_change_kind.expect("previous_change_kind was None when trying to insert file"),
+                    std::mem::take(&mut hunks),
                     next_scroll_start,
                 );
 
                 previous_file_diff.clear();
+                hunks.clear();
                 previous_change_kind = None;
                 next_scroll_start = line_count;
             }
@@ -157,6 +168,7 @@ impl Repo {
             previous_file_path.expect("previous_file_path was None when trying to insert file").as_str(),
             previous_file_diff,
             previous_change_kind.expect("previous_change_kind was None when trying to insert file"),
+            hunks,
             next_scroll_start,
         );
 
